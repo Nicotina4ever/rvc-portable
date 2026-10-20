@@ -347,6 +347,5 @@ OAuth PKCE with your own App Key ([docs/CLOUD-SYNC.md](docs/CLOUD-SYNC.md)). And
   [Faiss](https://github.com/facebookresearch/faiss) (MIT), [PyAV](https://github.com/PyAV-Org/PyAV) (BSD).
 - **UI**: HTML/CSS/JS scritti a mano, nessuna risorsa esterna, icone SVG originali.
 
-Licenza del progetto: **MIT** — vedi [LICENSE](LICENSE). (`git log` iniziale:
-[docs/PUBLISHING.md](docs/PUBLISHING.md)); senza un file `LICENSE` valgono tutti i diritti riservati.
-I componenti di terze parti (rvc-python, RVC, fairseq, PyTorch, Faiss, PyAV) mantengono le proprie licenze.
+Licenza del progetto: **MIT** — vedi [LICENSE](LICENSE). I componenti di terze parti
+(rvc-python, RVC, fairseq, PyTorch, Faiss, PyAV) mantengono le proprie licenze.
