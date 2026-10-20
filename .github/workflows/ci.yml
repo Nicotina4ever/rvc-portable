@@ -40,13 +40,13 @@ jobs:
         if: matrix.python == '3.9'
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "fastapi==0.88.0" "starlette==0.22.0" "pydantic==1.10.2" "requests==2.28.1" "watchdog==6.0.0" "pytest==7.4.4" "ruff==0.6.9"
+          python -m pip install "fastapi==0.88.0" "starlette==0.22.0" "pydantic==1.10.2" "requests==2.28.1" "watchdog==6.0.0" "pytest==7.4.4" "ruff==0.6.9" "httpx==0.23.3"
 
       - name: Dipendenze (Python 3.12)
         if: matrix.python != '3.9'
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "fastapi==0.88.0" "starlette==0.22.0" "pydantic>=1.10.13,<2" "requests" "watchdog" "pytest==7.4.4" "ruff==0.6.9"
+          python -m pip install "fastapi==0.88.0" "starlette==0.22.0" "pydantic>=1.10.13,<2" "requests" "watchdog" "pytest==7.4.4" "ruff==0.6.9" "httpx==0.23.3"
 
       - name: Lint
         run: python -m ruff check app tests tools

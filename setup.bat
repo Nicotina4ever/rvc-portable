@@ -35,6 +35,10 @@ if exist "%ROOT%\install.conf" (
         if not "%%A"=="" set "%%A=%%B"
     )
 )
+rem Mappa le chiavi di install.conf sui nomi usati dallo script.
+if defined RUNTIME_WINDOWS_URL set "RUNTIME_URL=%RUNTIME_WINDOWS_URL%"
+if defined RUNTIME_WINDOWS_SHA256 set "RUNTIME_SHA256=%RUNTIME_WINDOWS_SHA256%"
+if defined RUNTIME_WINDOWS_SIZE_MB set "RUNTIME_SIZE_MB=%RUNTIME_WINDOWS_SIZE_MB%"
 if defined RVC_RUNTIME_URL set "RUNTIME_URL=%RVC_RUNTIME_URL%"
 if defined RVC_RUNTIME_SHA256 set "RUNTIME_SHA256=%RVC_RUNTIME_SHA256%"
 if defined RVC_RUNTIME_PARTS set "RUNTIME_PARTS=%RVC_RUNTIME_PARTS%"
