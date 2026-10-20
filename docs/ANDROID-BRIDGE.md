@@ -60,6 +60,16 @@ scrittura). Dalla tab Cloud puoi sempre premere:
 - **Sincronizza modelli** — rigenera `modelli.txt` (dopo aver aggiunto modelli);
 - **Applica config** — forza la rilettura di `config.json`.
 
+## Modelli: nessuna conversione ONNX
+
+Il flusso supportato è **RVC remoto**: l'app invia il WAV, il PC lo converte con i modelli `.pth`
+originali tramite PyTorch/CUDA e restituisce `AudioOut/<nome>.wav`. Non serve convertire i modelli
+in ONNX né copiare pesi sul telefono.
+
+La pipeline ONNX locale sull'app è **disattivata** (sperimentale): richiedeva conversioni `.pth` →
+`.onnx` + indici `.fbin` ed era troppo fragile e macchinosa. Il codice resta nel repository Android
+dietro `RvcFeatures.LOCAL_ONNX_ENABLED = false`, ma non è raggiungibile dall'interfaccia.
+
 ## Controllo remoto del PC (senza VPN)
 
 L'app Android può cambiare i parametri del PC anche quando sei lontano: la scheda **Cloud →
