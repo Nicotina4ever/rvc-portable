@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-import sys`n`nimport app.doctor as doctor
+import sys
+
+import app.doctor as doctor
 from app.core.devices import RuntimeProbe
 
 
