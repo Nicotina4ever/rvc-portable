@@ -56,10 +56,38 @@ git config --global user.email "Nicotina4ever@users.noreply.github.com"
 git config --global credential.helper manager
 ```
 
-Poi, per ogni modifica:
+Poi, per ogni modifica, il modo semplice è **un solo comando** (o doppio click sul file):
 
 ```bat
-git status
+PUBBLICA.bat
+```
+
+Con un messaggio tuo:
+
+```bat
+PUBBLICA.bat -Message "Descrizione breve della modifica"
+```
+
+Lo script fa tutto in un'unica richiesta: controlla il branch `main`, imposta identità e Credential
+Manager se mancano, esegue `git add -A`, crea il commit solo se ci sono modifiche e fa il push.
+Usa il token già salvato, quindi non dovrebbe più chiedere permessi a ogni push: al primo push
+autorizza GitHub una volta nel browser.
+
+Per pubblicare **entrambi** i repository (PC + Android):
+
+```bat
+PUBBLICA-TUTTO.bat
+```
+
+Per vedere cosa farebbe senza pubblicare:
+
+```bat
+PUBBLICA.bat -DryRun
+```
+
+Se preferisci i comandi manuali, sotto il cofano lo script esegue:
+
+```bat
 git add -A
 git commit -m "Descrizione breve della modifica"
 git push
