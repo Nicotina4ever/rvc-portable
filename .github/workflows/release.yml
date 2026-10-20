@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versione (es. 3.0.0)"
+        required: true
+        default: "3.0.0"
+
+jobs:
+  build:
+    name: Archivi sorgente per OS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Crea gli archivi
+        run: |
+          python tools/make_release.py --target windows --target macos --target linux
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rvc-portable-${{ inputs.version }}
+          path: dist/*
+      - name: Nota runtime
+        run: |
+          echo "Il runtime Windows completo (Python 3.9.13 + motore) NON viene"
+          echo "ricostruito in CI: e' un asset separato della release."
+          echo "Su una macchina Windows di sviluppo:"
+          echo "  runtime\\python.exe -B tools\\build_runtime_asset.py --repo Nicotina4ever/rvc-portable --update-install-conf"
+          echo "poi carica dist/*runtime*.zip (o le parti .001/.002) nella release."
+          echo "Guida: docs/PUBLISHING.md"

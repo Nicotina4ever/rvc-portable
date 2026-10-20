@@ -1,0 +1,43 @@
+# Cache Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Ambienti e runtime (troppo grandi per il versionamento)
+runtime/
+runtime-py39/
+.venv/
+.dev/
+data/
+bin/ffmpeg.exe
+bin/ffmpeg
+bin/ffprobe*
+
+# Modelli e distribuzioni storiche: non vanno mai committati
+Modelli/
+Progetto/
+*.pth
+*.index
+*.zip
+*.rar
+*.pkg
+
+# Quarantena (file spostati, non cancellati)
+da_eliminare/
+
+# Build output
+dist/
+
+# Log e temporanei
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Segreti locali
+.dropbox_auth.json
+data/state/

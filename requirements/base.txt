@@ -1,0 +1,18 @@
+# Dipendenze del backend web/API (comuni a tutti i sistemi operativi).
+# Compatibili con Python 3.9 (runtime Windows) e 3.9–3.12 (macOS/Linux).
+#
+# NOTA: il motore RVC non è qui: vedi engine-windows.txt / engine-posix.txt.
+fastapi==0.88.0
+starlette==0.22.0
+uvicorn==0.20.0
+pydantic==1.10.2
+python-multipart==0.0.6
+watchdog==6.0.0
+requests==2.28.1
+certifi==2022.12.7
+charset-normalizer==2.1.1
+idna==3.4
+urllib3==1.26.13
+soundfile==0.11.0
+av==10.0.0
+numpy==1.23.5

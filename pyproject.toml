@@ -1,0 +1,36 @@
+[project]
+name = "rvc-portable"
+version = "3.0.0"
+description = "RVC Portable — NL Tools Suite: backend locale, motore RVC e interfaccia web"
+requires-python = ">=3.9"
+readme = "README.md"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "e2e: test end-to-end che richiedono il runtime e i modelli reali",
+    "integration: test di integrazione API",
+    "slow: test lenti",
+]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+exclude = [
+    "runtime",
+    "runtime-py39",
+    "data",
+    ".dev",
+    ".venv",
+    "da_eliminare",
+    "Modelli",
+    "Progetto",
+    "web",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+# B904: per gli errori API l'incatenamento esplicito non aggiunge informazione
+# (l'envelope espone già codice e dettaglio); B008 è incompatibile con FastAPI.
+ignore = ["E501", "B008", "E402", "B904"]

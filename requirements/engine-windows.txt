@@ -1,0 +1,45 @@
+# Motore RVC — profilO Windows (Python 3.9.13), identico al runtime storico verificato.
+# Vincolo critico: torch < 2.6 (fairseq usa torch.load con weights_only=False).
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+torch==2.0.0+cu118
+torchaudio==2.0.1
+torchvision==0.15.1
+numpy==1.23.5
+faiss-cpu==1.7.2
+omegaconf==2.0.6
+pyworld==0.3.2
+torchcrepe==0.0.19
+praat-parselmouth==0.4.2
+librosa==0.9.1
+numba==0.56.4
+llvmlite==0.39.1
+soxr==0.5.0.post1
+audioread==3.1.0
+soundfile==0.11.0
+av==10.0.0
+cffi==1.15.1
+future==1.0.0
+joblib==1.2.0
+scikit-learn==1.2.0
+scipy==1.9.3
+threadpoolctl==3.1.0
+tqdm==4.64.1
+loguru==0.7.3
+tensorboardX==2.6.1
+protobuf==4.22.1
+PyYAML==6.0
+regex==2022.10.31
+packaging==22.0
+filelock==3.10.0
+fsspec==2022.11.0
+
+# rvc-python 0.1.5: installare con `pip install rvc-python==0.1.5 --no-deps`
+# dopo aver installato fairseq (sdist, richiede VS Build Tools su Windows).
+# Il runtime portatile include già entrambi e i pesi base: vedere docs/INSTALL-WINDOWS.md.
+rvc-python==0.1.5
+fairseq==0.12.2
+
+# Acceleratori opzionali (sperimentali, non supportati dal motore):
+# torch-directml==0.2.0.dev230426
+# onnxruntime-gpu==1.15.1
