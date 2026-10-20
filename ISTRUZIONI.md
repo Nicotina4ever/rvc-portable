@@ -140,7 +140,7 @@ Già fatte:
 
 - Android: RVC locale nascosto, flusso solo remoto; niente modelli ONNX sul telefono.
 - PC: `status.json` compatto (heartbeat per il controllo remoto), installer corretto, docs aggiornate.
-- Repository Android: solo sorgenti (54 MB), modelli/APK/keystore esclusi; CI aggiustata.
+- Repository Android: solo sorgenti (~27 MB dopo la rimozione degli header PyTorch inutilizzati), modelli/APK/keystore esclusi; CI verde.
 - Runtime PC: release completa e installazione da clone pulito verificata.
 
 Prossimi passi possibili (da fare solo se vuoi):
