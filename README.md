@@ -6,7 +6,7 @@ Registri e monti nella mini-DAW Android → il WAV finisce in una cartella Dropb
 importare sul telefono. Oppure usi tutto in locale: monitori una cartella a scelta, il PC converte
 e archivia i risultati dove vuoi.
 
-Repository: <https://github.com/Nicotina4ever/rvc-portable> · Android: <https://github.com/Nicotina4ever/rvc-droid>
+Repository: <https://github.com/Nicotina4ever/rvc-portable> · Android: <https://github.com/Nicotina4ever/rvc-droid> · [Istruzioni pratiche](ISTRUZIONI.md)
 
 Si installa **da solo in una cartella a tua scelta**: il repository resta leggero (~3 MB),
 `setup.bat` scarica una volta il runtime del motore (~3,5 GB) e poi tutto funziona offline,
