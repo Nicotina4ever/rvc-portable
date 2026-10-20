@@ -102,6 +102,7 @@ sconosciuta restituisce `index.html` (SPA fallback).
     "enabled": false, "shared_dir": "", "input_subdir": "AudioIn",
     "output_subdir": "AudioOut", "config_name": "config.json",
     "models_name": "modelli.txt", "status_name": "status.json",
+    "status_heartbeat_s": 300.0,
     "apply_remote_config": true, "same_name_output": true
   },
   "ui": { "language": "it", "theme": "dark", "last_view": "dashboard", "compact": false }
@@ -113,8 +114,10 @@ Valori validi: `method ∈ {rmvpe,harvest,crepe,pm}`, `device ∈ {auto,cpu,cuda
 Note ponte Android: con `android.enabled` e `same_name_output` attivi, i job con
 `sorgente=monitor` scrivono `<output_dir>/<stesso nome input>.<ext>` (sovrascrivendo), così l'app
 Android trova `AudioOut/<nome>.wav`. `ConfigSync` applica `cloud.local_path` (config v3 o piatto
-Android) e riscrive la config in forma ibrida. Il PC pubblica `status.json` ogni ~5 s per il
-controllo remoto dall'app (heartbeat: motore, coda, watcher, ultima config, parametri audio).
+Android) e riscrive la config in forma ibrida. Il PC pubblica `status.json` quando lo stato cambia
+e con un heartbeat ogni `android.status_heartbeat_s` secondi (default 300) per il controllo remoto
+dall'app (motore, coda, watcher, ultima config, parametri audio); `config.json` viene riscritto solo
+se il contenuto cambia davvero.
 Vedi [ANDROID-BRIDGE.md](ANDROID-BRIDGE.md).
 
 ### Job

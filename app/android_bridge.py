@@ -245,7 +245,6 @@ def hybrid_config(settings) -> Dict[str, Any]:
     data["android_bridge"] = {
         "app": "rvc-portable-android",
         "format": 1,
-        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
     }
     return data
 
@@ -291,6 +290,10 @@ def write_json_atomic(path: str, data: Dict[str, Any]) -> None:
 
 def write_hybrid_config(path: str, settings) -> Dict[str, Any]:
     data = hybrid_config(settings)
+    # Non riscrivere se il contenuto e' gia' identico: evita sincronizzazioni
+    # Dropbox inutili (e copie in conflitto) quando l'API viene chiamata piu' volte.
+    if read_json_file(path) == data:
+        return data
     write_json_atomic(path, data)
     return data
 
@@ -339,8 +342,15 @@ def write_models_file(path: str, entries: List[Dict[str, Any]]) -> Dict[str, Any
         index_path = _clean_path(entry.get("index_path") or "")
         lines.append("%s | %s | %s" % (display, model_path, index_path))
         written += 1
-    _write_text_atomic(path, "\n".join(lines) + "\n")
-    return {"count": written, "path": path}
+    text = "\n".join(lines) + "\n"
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            if handle.read() == text:
+                return {"count": written, "path": path, "written": False}
+    except OSError:
+        pass
+    _write_text_atomic(path, text)
+    return {"count": written, "path": path, "written": True}
 
 
 def read_models_count(path: str) -> int:
@@ -560,6 +570,9 @@ def export_shared_config(manager: SettingsManager) -> Dict[str, Any]:
     try:
         ensure_shared_dirs(paths)
         cleanup_stale_temps(paths["shared_dir"])
+        desired = hybrid_config(manager.settings)
+        if read_json_file(paths["config_path"]) == desired:
+            return {"written": False, "reason": "unchanged", "path": paths["config_path"]}
         write_hybrid_config(paths["config_path"], manager.settings)
     except (OSError, AndroidBridgeError) as exc:
         return {"written": False, "reason": str(exc), "path": paths["config_path"]}
@@ -736,6 +749,7 @@ class ConfigSync:
         self._last_error = ""
         self._last_check = 0.0
         self._applied_count = 0
+        self.status_publisher = None
 
     # ------------------------------------------------------------------ api
     def start(self) -> None:
@@ -799,6 +813,16 @@ class ConfigSync:
                 LOGGER.warning("config sync: %s", exc)
             self._stop.wait(self.interval_s)
 
+    def _notify_status(self) -> None:
+        """Forza un aggiornamento di status.json dopo una config applicata."""
+        publisher = self.status_publisher
+        if publisher is None:
+            return
+        try:
+            publisher.publish_once(force=True)
+        except Exception:  # pragma: no cover - difensivo
+            LOGGER.exception("status publisher: aggiornamento dopo config fallito")
+
     def _check(self, path: Optional[str] = None, force: bool = False) -> Optional[Dict[str, Any]]:
         target = path or self._path or self._resolve_path()
         if not target:
@@ -836,6 +860,7 @@ class ConfigSync:
         self._last_applied = result
         self._applied_count += 1
         self._last_check = time.time()
+        self._notify_status()
         if result.get("mode") == "android":
             # Riscrive la forma ibrida solo se serve davvero: meno scritture = meno
             # copie in conflitto quando Dropbox sincronizza in parallelo.
@@ -902,15 +927,18 @@ class StatusPublisher:
         manager: SettingsManager,
         providers: Optional[Dict[str, Callable[[], Any]]] = None,
         interval_s: float = 5.0,
+        heartbeat_s: float = 300.0,
     ) -> None:
         self.manager = manager
         self.providers = providers or {}
         self.interval_s = max(2.0, float(interval_s or 5.0))
+        self.heartbeat_s = max(30.0, float(heartbeat_s or 300.0))
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._lock = threading.Lock()
         self._last_error = ""
         self._last_written = 0.0
+        self._last_stable = ""
         self._writes = 0
 
     # ------------------------------------------------------------------ api
@@ -935,6 +963,7 @@ class StatusPublisher:
         return {
             "running": bool(self._thread is not None and self._thread.is_alive()),
             "interval_s": self.interval_s,
+            "heartbeat_s": self.heartbeat_s,
             "writes": self._writes,
             "last_written": round(self._last_written, 3),
             "last_error": self._last_error,
@@ -961,7 +990,6 @@ class StatusPublisher:
                     raw = {
                         "running": raw.get("running"),
                         "path": raw.get("path"),
-                        "last_check": raw.get("last_check"),
                         "last_error": raw.get("last_error", ""),
                         "applied_count": raw.get("applied_count", 0),
                         "mode": last.get("mode", "") if isinstance(last, dict) else "",
@@ -988,7 +1016,17 @@ class StatusPublisher:
         }
         return data
 
-    def publish_once(self) -> Optional[Dict[str, Any]]:
+    def _stable_signature(self, data: Dict[str, Any]) -> str:
+        """Impronta dello stato senza timestamp: serve a evitare scritture inutili."""
+        stable = dict(data)
+        stable.pop("timestamp", None)
+        stable.pop("iso", None)
+        try:
+            return json.dumps(stable, sort_keys=True, ensure_ascii=False, default=str)
+        except (TypeError, ValueError):
+            return repr(stable)
+
+    def publish_once(self, force: bool = True) -> Optional[Dict[str, Any]]:
         settings = self.manager.settings
         if not settings.android.enabled or not settings.android.shared_dir:
             return None
@@ -997,6 +1035,14 @@ class StatusPublisher:
         if not path:
             return None
         data = self.build_status()
+        signature = self._stable_signature(data)
+        now = time.time()
+        if (
+            not force
+            and signature == self._last_stable
+            and (now - self._last_written) < self.heartbeat_s
+        ):
+            return None
         try:
             write_json_atomic(path, data)
         except OSError as exc:
@@ -1006,6 +1052,7 @@ class StatusPublisher:
         cleanup_stale_temps(paths["shared_dir"])
         self._last_error = ""
         self._last_written = time.time()
+        self._last_stable = signature
         self._writes += 1
         return data
 
@@ -1013,7 +1060,7 @@ class StatusPublisher:
     def _loop(self) -> None:
         while not self._stop.is_set():
             try:
-                self.publish_once()
+                self.publish_once(force=False)
             except Exception as exc:  # pragma: no cover - difensivo
                 self._last_error = str(exc)
                 LOGGER.warning("status publisher: %s", exc)

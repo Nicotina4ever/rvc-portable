@@ -222,7 +222,15 @@ def _build_status_publisher(manager, engine, queue, watcher, config_sync, logger
             "watcher": lambda: watcher.status() if watcher is not None else {},
             "config": lambda: config_sync.status() if config_sync is not None else {},
         }
-        publisher = StatusPublisher(manager, providers)
+        publisher = StatusPublisher(
+            manager,
+            providers,
+            heartbeat_s=manager.settings.android.status_heartbeat_s,
+        )
+        if config_sync is not None:
+            # Dopo l'applicazione di config.json lo stato va aggiornato subito,
+            # senza aspettare il prossimo heartbeat.
+            config_sync.status_publisher = publisher
         publisher.start()
         return publisher
     except Exception as exc:  # pragma: no cover - non blocca l'avvio

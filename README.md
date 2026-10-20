@@ -65,7 +65,8 @@ Guida completa: **[docs/ANDROID-BRIDGE.md](docs/ANDROID-BRIDGE.md)**.
 - **Ponte Android/Dropbox**: preset con auto-rilevamento Dropbox, cartelle condivise
   `AudioIn`/`AudioOut`, `modelli.txt` generato dai modelli del PC, config ibrida letta sia dal PC
   sia dall'app Android, hot-reload e output con lo stesso nome del file ricevuto. Il PC pubblica
-  `status.json` ogni pochi secondi, così dall'app puoi vedere se è online e **cambiare i parametri
+  `status.json` solo quando lo stato cambia e con un heartbeat ogni 5 minuti (configurabile), così
+  dall'app puoi vedere se è online e **cambiare i parametri
   RVC da remoto** (pitch, metodo, index rate, protezione, modello) senza aprire porte o VPN.
 - **Monitoraggio di una cartella a scelta** (Dropbox, NAS, OneDrive, locale): ogni nuovo file audio
   (`.wav .mp3 .ogg .m4a .flac .aac .opus .wma`) viene accodato e convertito automaticamente, con

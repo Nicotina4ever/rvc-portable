@@ -197,6 +197,7 @@ class AndroidSettings(BaseModel):
     config_name: str = "config.json"
     models_name: str = "modelli.txt"
     status_name: str = "status.json"
+    status_heartbeat_s: float = Field(300.0, ge=30.0, le=1800.0)
     apply_remote_config: bool = True
     same_name_output: bool = True
 

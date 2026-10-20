@@ -223,3 +223,45 @@ def test_status_publisher_writes_heartbeat(manager: SettingsManager, tmp_path):
     assert payload["providers"]["queue"]["done"] == 2
     assert payload["schema"] == bridge.STATUS_SCHEMA
     assert payload["audio"]["pitch"] == manager.settings.audio.pitch
+
+
+def test_export_shared_config_skips_unchanged(manager: SettingsManager, tmp_path):
+    shared = tmp_path / "shared"
+    manager.settings.android.enabled = True
+    manager.settings.android.shared_dir = str(shared)
+    manager.settings.audio.pitch = 4
+    first = bridge.export_shared_config(manager)
+    assert first["written"] is True
+    config_path = shared / "config.json"
+    first_bytes = config_path.read_bytes()
+    second = bridge.export_shared_config(manager)
+    assert second["written"] is False
+    assert second["reason"] == "unchanged"
+    assert config_path.read_bytes() == first_bytes
+
+
+def test_write_models_file_skips_unchanged(tmp_path):
+    target = tmp_path / "modelli.txt"
+    entries = [{"name": "Voce", "path": "C:\\m\\voce.pth", "index_path": ""}]
+    first = bridge.write_models_file(str(target), entries)
+    assert first["written"] is True
+    second = bridge.write_models_file(str(target), entries)
+    assert second["written"] is False
+    assert bridge.read_models_count(str(target)) == 1
+
+
+def test_status_publisher_skips_unchanged_until_heartbeat(manager: SettingsManager, tmp_path):
+    shared = tmp_path / "shared"
+    manager.settings.android.enabled = True
+    manager.settings.android.shared_dir = str(shared)
+    publisher = bridge.StatusPublisher(
+        manager,
+        {"engine": lambda: {"available": True}},
+        interval_s=5.0,
+        heartbeat_s=60.0,
+    )
+    assert publisher.publish_once(force=False) is not None
+    assert publisher.publish_once(force=False) is None
+    assert publisher.status()["writes"] == 1
+    assert publisher.publish_once(force=True) is not None
+    assert publisher.status()["writes"] == 2

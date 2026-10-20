@@ -27,6 +27,10 @@ Riscrittura completa: architettura frontend/backend, ripristino del motore RVC, 
   solo un'impostazione salvata): aprendo l'app il watcher parte da solo sulla cartella configurata.
 - **Riconversione stesso nome**: la chiave di deduplica include ora dimensione e mtime del file,
   quindi un file ricaricato con lo stesso nome (tipico del flusso telefono) viene rielaborato.
+- **Dropbox in sincronizzazione continua**: `config.json` viene riscritto solo se il contenuto
+  cambia (niente più `generated_at` volatile) e `status.json` viene aggiornato quando cambia lo
+  stato, con heartbeat ogni 5 minuti (`android.status_heartbeat_s`). Dopo l'applicazione di una
+  config Android lo stato viene aggiornato subito.
 
 ### Aggiunto
 

@@ -75,7 +75,9 @@ dietro `RvcFeatures.LOCAL_ONNX_ENABLED = false`, ma non è raggiungibile dall'in
 L'app Android può cambiare i parametri del PC anche quando sei lontano: la scheda **Cloud →
 Controllo PC** mostra lo stato del PC e permette di inviare una nuova configurazione.
 
-1. Il PC scrive `TestRVC/status.json` ogni ~5 secondi (heartbeat) con:
+1. Il PC scrive `TestRVC/status.json` **quando lo stato cambia** (motore, coda, config) e con un
+   heartbeat ogni 5 minuti (configurabile con `android.status_heartbeat_s`), per non tenere Dropbox
+   in sincronizzazione continua. Il file contiene:
    - `providers.engine` (motore disponibile, device, GPU, modello caricato),
    - `providers.queue` (queued/running/done/failed),
    - `providers.watcher` (monitor attivo e cartella),
@@ -86,6 +88,9 @@ Controllo PC** mostra lo stato del PC e permette di inviare una nuova configuraz
 3. Dal pannello puoi modificare pitch, formant, index rate, protezione, metodo F0 e modello, poi
    premere **INVIA AL PC**: l'app scrive `config.json`; il PC lo applica con hot-reload (~2 s) e
    aggiorna `status.json`. **LEGGI CONFIG** riporta nel telefono la config attualmente sul PC.
+
+Anche il `config.json` viene riscritto **solo se il contenuto cambia**: una chiamata API identica
+non produce scritture né sincronizzazioni Dropbox.
 
 Tutto passa dal client Dropbox desktop: **nessuna porta aperta sul PC, nessuna VPN, nessun token
 sul PC**. Il vecchio `Modifica Parametri.html` non serve più: il controllo remoto è dentro l'app e
