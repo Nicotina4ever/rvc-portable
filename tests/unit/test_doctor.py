@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-import app.doctor as doctor
+import sys`n`nimport app.doctor as doctor
 from app.core.devices import RuntimeProbe
 
 
 def good_probe() -> RuntimeProbe:
     return RuntimeProbe(
         available=True,
-        python_executable="runtime/python.exe",
+        python_executable=sys.executable,
         python_version="3.9.13",
         torch="2.0.0+cu118",
         cuda=True,
