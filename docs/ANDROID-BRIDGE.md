@@ -89,8 +89,9 @@ Controllo PC** mostra lo stato del PC e permette di inviare una nuova configuraz
    premere **INVIA AL PC**: l'app scrive `config.json`; il PC lo applica con hot-reload (~2 s) e
    aggiorna `status.json`. **LEGGI CONFIG** riporta nel telefono la config attualmente sul PC.
 
-Anche il `config.json` viene riscritto **solo se il contenuto cambia**: una chiamata API identica
-non produce scritture né sincronizzazioni Dropbox.
+Anche il `config.json` non viene più riscritto dal PC a ogni salvataggio: è un flusso
+**telefono → PC** per i parametri remoti, più la scrittura esplicita del preset/Sincronizza. Le
+modifiche fatte sul PC restano locali e arrivano al telefono tramite `status.json`.
 
 Tutto passa dal client Dropbox desktop: **nessuna porta aperta sul PC, nessuna VPN, nessun token
 sul PC**. Il vecchio `Modifica Parametri.html` non serve più: il controllo remoto è dentro l'app e
@@ -114,10 +115,10 @@ L'app Android mostra il nome e, alla conversione, invia nel `config.json` i perc
 
 ### `config.json`
 
-Il PC scrive una forma **ibrida**: schema v3 annidato (per sé) + chiavi piatte che l'app Android
-legge (`pitch`, `method`, `protect`, `index_rate`, `model_path`, `index_path`).
-Quando il telefono scrive la sua versione piatta, il PC la applica automaticamente e riscrive il
-file ibrido, così le due parti restano allineate.
+Il PC scrive una forma **ibrida** (schema v3 annidato + chiavi piatte) solo quando si preme
+**Preset Dropbox/Android** o **Sincronizza modelli**: non viene rigenerato a ogni salvataggio.
+Quando il telefono scrive la sua versione piatta, il PC la applica automaticamente e **lascia il
+file com'è**: niente riscritture, niente sincronizzazioni Dropbox a catena.
 
 Esempio delle chiavi piatte:
 
@@ -173,8 +174,8 @@ restare come riferimento. Il PC riscrive solo `config.json`, `modelli.txt` e le 
   `ConfigSync`, retry di scrittura per i lock del client Dropbox); rotte `/api/android*`; preset in
   `web/js/views/cloud.js`.
 - Hot-reload: `ConfigSync` osserva `cloud.local_path` ogni ~2 s e applica solo se il contenuto
-  cambia (hash); riscrive la forma ibrida solo quando i valori differiscono, per ridurre le
-  copie in conflitto di Dropbox.
+  cambia (hash); **non riscrive** il file applicato. Il config viene scritto dal telefono o dal
+  preset/Sincronizza esplicito, non dalle normali modifiche impostazioni del PC.
 - Il PC non effettua chiamate Dropbox: la sincronizzazione è del client desktop. Se preferisci
   evitare il client, resta disponibile l'integrazione OAuth della tab Cloud (opzione avanzata).
 - Il motore Android (ONNX) e il motore PC (PyTorch) restano indipendenti: il telefono non ha

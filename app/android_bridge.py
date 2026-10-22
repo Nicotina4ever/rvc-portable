@@ -861,19 +861,6 @@ class ConfigSync:
         self._applied_count += 1
         self._last_check = time.time()
         self._notify_status()
-        if result.get("mode") == "android":
-            # Riscrive la forma ibrida solo se serve davvero: meno scritture = meno
-            # copie in conflitto quando Dropbox sincronizza in parallelo.
-            current = payload if isinstance(payload, dict) else {}
-            desired = hybrid_config(self.manager.settings)
-            if _needs_hybrid_rewrite(current, desired):
-                try:
-                    write_hybrid_config(target, self.manager.settings)
-                    cleanup_stale_temps(os.path.dirname(target))
-                    with open(target, "rb") as handle:
-                        digest = _hash_bytes(handle.read())
-                except OSError:
-                    pass
         self._last_hash = digest
         if self.bus is not None:
             try:

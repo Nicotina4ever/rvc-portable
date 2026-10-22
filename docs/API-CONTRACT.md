@@ -114,10 +114,10 @@ Valori validi: `method ∈ {rmvpe,harvest,crepe,pm}`, `device ∈ {auto,cpu,cuda
 Note ponte Android: con `android.enabled` e `same_name_output` attivi, i job con
 `sorgente=monitor` scrivono `<output_dir>/<stesso nome input>.<ext>` (sovrascrivendo), così l'app
 Android trova `AudioOut/<nome>.wav`. `ConfigSync` applica `cloud.local_path` (config v3 o piatto
-Android) e riscrive la config in forma ibrida. Il PC pubblica `status.json` quando lo stato cambia
-e con un heartbeat ogni `android.status_heartbeat_s` secondi (default 300) per il controllo remoto
-dall'app (motore, coda, watcher, ultima config, parametri audio); `config.json` viene riscritto solo
-se il contenuto cambia davvero.
+Android) senza riscriverlo: il `config.json` è un flusso telefono → PC e viene rigenerato solo da
+preset/Sincronizza esplicito. Il PC pubblica `status.json` quando lo stato cambia e con un
+heartbeat ogni `android.status_heartbeat_s` secondi (default 300) per il controllo remoto
+dall'app (motore, coda, watcher, ultima config, parametri audio).
 Vedi [ANDROID-BRIDGE.md](ANDROID-BRIDGE.md).
 
 ### Job

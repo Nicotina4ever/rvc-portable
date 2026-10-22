@@ -38,16 +38,6 @@ def _body_settings(body: Any) -> Dict[str, Any]:
     raise ApiError("settings_invalid", "Corpo JSON non valido")
 
 
-def _export_shared(manager) -> None:
-    """Se il ponte Android è attivo, allinea il config.json condiviso alle impostazioni PC."""
-    try:
-        from ...android_bridge import maybe_export_shared
-
-        maybe_export_shared(manager)
-    except Exception:  # pragma: no cover - non blocca il salvataggio
-        pass
-
-
 @router.get("/api/settings")
 def get_settings(request: Request):
     return _snapshot(request)
@@ -66,7 +56,6 @@ async def put_settings(request: Request):
         manager.save(candidate)
     except Exception as exc:
         raise ApiError("settings_write_failed", "Salvataggio fallito", 500, {}, str(exc))
-    _export_shared(manager)
     events.publish("config", source="api", path=manager.paths.config_path)
     return _snapshot(request)
 
@@ -82,7 +71,6 @@ async def patch_settings(request: Request):
         manager.apply_patch(patch)
     except Exception as exc:
         raise ApiError("settings_invalid", "Impostazioni non valide", 422, {}, str(exc))
-    _export_shared(manager)
     events.publish("config", source="api", path=manager.paths.config_path)
     return _snapshot(request)
 
@@ -108,7 +96,6 @@ async def import_settings(request: Request):
         manager.import_dict(data)
     except Exception as exc:
         raise ApiError("settings_invalid", "Import fallito", 422, {}, str(exc))
-    _export_shared(manager)
     events.publish("config", source="import", path=manager.paths.config_path)
     return _snapshot(request)
 
