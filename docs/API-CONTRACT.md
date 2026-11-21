@@ -90,8 +90,9 @@ sconosciuta restituisce `index.html` (SPA fallback).
   },
   "engine": { "device": "auto", "warm_model": true, "idle_unload_minutes": 15, "max_concurrency": 1 },
   "monitor": {
-    "enabled_on_start": false, "process_existing": false, "watch_mode": "auto",
-    "poll_interval_s": 2.0, "stability_ms": 1500,
+    "auto_start": false, "process_existing": false, "watch_mode": "auto",
+    "poll_interval_s": 5.0, "stability_ms": 2000,
+    "quiet_logs": true, "idle_stop_minutes": 0,
     "ignore_globs": ["*.tmp","*.part","*.crdownload","~$*",".*"], "ignore_output_dir": true
   },
   "cloud": {

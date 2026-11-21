@@ -131,11 +131,20 @@ class EngineSettings(BaseModel):
 
 
 class MonitorSettings(BaseModel):
-    enabled_on_start: bool = False
+    """Monitoraggio cartella: spento per default, silenzioso e event-driven.
+
+    ``auto_start`` e' un opt-in esplicito: all'avvio il watcher non parte mai da
+    solo. Il flusso telefono/Dropbox lo attiva dalla UI o dal preset, che spiega
+    il motivo. ``quiet_logs`` tiene i messaggi di ciclo a livello DEBUG.
+    """
+
+    auto_start: bool = False
     process_existing: bool = False
     watch_mode: str = "auto"
-    poll_interval_s: float = Field(2.0, ge=0.5, le=30.0)
-    stability_ms: int = Field(1500, ge=0, le=10000)
+    poll_interval_s: float = Field(5.0, ge=2.0, le=60.0)
+    stability_ms: int = Field(2000, ge=0, le=10000)
+    quiet_logs: bool = True
+    idle_stop_minutes: int = Field(0, ge=0, le=1440)
     ignore_globs: List[str] = Field(default_factory=lambda: list(DEFAULT_IGNORE_GLOBS))
     ignore_output_dir: bool = True
 
@@ -336,6 +345,36 @@ _V2_AUDIO_KEYS = (
 )
 
 
+def _migrate_monitor_autostart(
+    data: Dict[str, Any], warnings: List[str]
+) -> Dict[str, Any]:
+    """Porta ``monitor.enabled_on_start`` a ``monitor.auto_start`` (opt-in).
+
+    La vecchia chiave accendeva il watcher a ogni avvio senza che l'utente lo
+    sapesse. La migrazione disattiva l'avvio automatico una volta sola e lo
+    segnala, cosi' chi vuole il flusso telefono lo riattiva con un gesto
+    esplicito dalla UI.
+    """
+    if not isinstance(data, dict):
+        return data
+    monitor = data.get("monitor")
+    if not isinstance(monitor, dict):
+        return data
+    if "auto_start" in monitor or "enabled_on_start" not in monitor:
+        return data
+    legacy = bool(monitor.get("enabled_on_start"))
+    migrated = dict(monitor)
+    migrated.pop("enabled_on_start", None)
+    migrated["auto_start"] = False
+    updated = dict(data)
+    updated["monitor"] = migrated
+    if legacy:
+        warnings.append(
+            "monitor: avvio automatico disattivato (ora richiede consenso esplicito)"
+        )
+    return updated
+
+
 def _migrate_flat_v2(flat: Dict[str, Any]) -> Tuple[Dict[str, Any], List[str]]:
     warnings: List[str] = []
     audio: Dict[str, Any] = {}
@@ -415,8 +454,15 @@ class SettingsManager:
         if os.path.isfile(self.paths.config_path):
             data = self._read_json(self.paths.config_path)
             if data is not None:
+                original = data
+                data = _migrate_monitor_autostart(data, self.warnings)
                 self.settings = self._build(data, self.paths.config_path)
                 self._loaded_from = self.paths.config_path
+                if data is not original:
+                    try:
+                        self.save()
+                    except SettingsError:
+                        pass
                 return self.settings
 
         legacy = self.paths.legacy_config_path
@@ -446,6 +492,7 @@ class SettingsManager:
             migrated, warnings = _migrate_flat_v2(data)
             self.warnings.extend(warnings)
             data = migrated
+        data = _migrate_monitor_autostart(data, self.warnings)
         try:
             return Settings(**data)
         except Exception as exc:  # pydantic.ValidationError
@@ -527,6 +574,7 @@ class SettingsManager:
             migrated, warnings = _migrate_flat_v2(data)
             self.warnings.extend(warnings)
             data = migrated
+        data = _migrate_monitor_autostart(data, self.warnings)
         candidate = Settings(**data)
         self.save(candidate)
         return candidate

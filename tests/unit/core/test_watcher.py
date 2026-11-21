@@ -186,3 +186,79 @@ def test_on_state_receives_status(tmp_path, manager, paths):
         assert "processed_session" in states[-1]
     finally:
         watcher.stop()
+
+
+def test_status_exposes_idle_and_quiet(tmp_path, manager, paths):
+    input_dir = tmp_path / "in"
+    output_dir = tmp_path / "out"
+    input_dir.mkdir()
+    output_dir.mkdir()
+    _configure(manager, input_dir, output_dir)
+    watcher = _make_watcher(manager, paths, [])
+    try:
+        status = watcher.start(str(input_dir))
+        assert status["quiet"] is True
+        assert status["idle_s"] >= 0
+        assert status["idle_stop_minutes"] == 0
+    finally:
+        watcher.stop()
+
+
+def test_idle_expiry_requires_no_pending(tmp_path, manager, paths):
+    input_dir = tmp_path / "in"
+    output_dir = tmp_path / "out"
+    input_dir.mkdir()
+    output_dir.mkdir()
+    _configure(manager, input_dir, output_dir)
+    watcher = _make_watcher(manager, paths, [])
+    watcher._idle_stop_minutes = 1
+    now = time.time()
+    watcher._last_activity = now - 3600
+    assert watcher._idle_expired(now) is True
+    watcher._pending["x"] = {"last_change": now}
+    assert watcher._idle_expired(now) is False
+
+
+def test_quiet_logs_keep_cycle_at_debug(tmp_path, manager, paths, caplog):
+    import logging
+
+    input_dir = tmp_path / "in"
+    output_dir = tmp_path / "out"
+    input_dir.mkdir()
+    output_dir.mkdir()
+    _configure(manager, input_dir, output_dir)
+    caplog.set_level(logging.DEBUG, logger="rvc.watcher")
+    watcher = _make_watcher(manager, paths, [])
+    try:
+        watcher.start(str(input_dir))
+    finally:
+        watcher.stop()
+    info_messages = [
+        record.getMessage() for record in caplog.records if record.levelno == logging.INFO
+    ]
+    debug_messages = [
+        record.getMessage() for record in caplog.records if record.levelno == logging.DEBUG
+    ]
+    assert not any("monitor avviato" in message for message in info_messages)
+    assert any("monitor avviato" in message for message in debug_messages)
+
+
+def test_noisy_logs_when_quiet_disabled(tmp_path, manager, paths, caplog):
+    import logging
+
+    input_dir = tmp_path / "in"
+    output_dir = tmp_path / "out"
+    input_dir.mkdir()
+    output_dir.mkdir()
+    _configure(manager, input_dir, output_dir)
+    manager.settings.monitor.quiet_logs = False
+    caplog.set_level(logging.INFO, logger="rvc.watcher")
+    watcher = _make_watcher(manager, paths, [])
+    try:
+        watcher.start(str(input_dir))
+    finally:
+        watcher.stop()
+    info_messages = [
+        record.getMessage() for record in caplog.records if record.levelno == logging.INFO
+    ]
+    assert any("monitor avviato" in message for message in info_messages)

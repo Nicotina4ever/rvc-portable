@@ -18,6 +18,24 @@ def test_defaults(manager):
     assert settings.ui.language == "it"
     assert settings.engine.device == "auto"
     assert settings.monitor.ignore_globs
+    assert settings.monitor.auto_start is False
+    assert settings.monitor.quiet_logs is True
+
+
+def test_monitor_autostart_migrates_to_off(paths):
+    from app.settings import SettingsManager
+
+    payload = {
+        "schema_version": SCHEMA_VERSION,
+        "monitor": {"enabled_on_start": True, "poll_interval_s": 2.0},
+    }
+    with open(paths.config_path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle)
+    manager = SettingsManager(paths)
+    settings = manager.load()
+    assert settings.monitor.auto_start is False
+    assert any("monitor" in warning for warning in manager.warnings)
+    assert "enabled_on_start" not in settings.monitor.dict()
 
 
 def test_migrate_flat_v2(paths, manager):

@@ -48,9 +48,10 @@ AUDIO_EXTENSIONS = (
     ".wma",
 )
 DEFAULT_IGNORE_GLOBS = ["*.tmp", "*.part", "*.crdownload", "~$*", ".*"]
-DEFAULT_STABILITY_MS = 1500
-DEFAULT_POLL_INTERVAL_S = 2.0
-TICK_S = 0.1
+DEFAULT_STABILITY_MS = 2000
+DEFAULT_POLL_INTERVAL_S = 5.0
+MIN_POLL_INTERVAL_S = 2.0
+IDLE_WAIT_S = 5.0
 PROCESSED_VERSION = 1
 PROCESSED_MAX_ENTRIES = 5000
 
@@ -89,6 +90,12 @@ class Watcher:
         self._poll_interval_s = DEFAULT_POLL_INTERVAL_S
         self._ignore_globs: List[str] = list(DEFAULT_IGNORE_GLOBS)
         self._ignore_output_dir = True
+        self._quiet = True
+        self._idle_stop_minutes = 0
+        self._last_activity = time.time()
+        self._last_event_ts = 0.0
+        self._handler_instance = None
+        self._observer_lock = threading.Lock()
         self._processed_path = processed_path or self._default_processed_path()
         self._load_processed()
 
@@ -111,6 +118,10 @@ class Watcher:
                 "dir": self.directory,
                 "mode": self._mode,
                 "processed_session": int(self._processed_session),
+                "idle_s": round(max(0.0, time.time() - self._last_activity), 1),
+                "last_event": round(self._last_event_ts, 3),
+                "quiet": bool(self._quiet),
+                "idle_stop_minutes": int(self._idle_stop_minutes),
             }
             if queued is not None:
                 payload["queued"] = queued
@@ -134,6 +145,8 @@ class Watcher:
             self._processed_session = 0
             self._session_seen = {}
             self._pending = {}
+            self._last_activity = time.time()
+            self._last_event_ts = 0.0
             self._drain_events()
 
         self._observer, self._manual_scan = self._create_observer()
@@ -157,7 +170,7 @@ class Watcher:
                 self._mode = "polling"
                 LOGGER.warning("monitor: fallback polling (%s)", exc)
 
-        LOGGER.info("monitor avviato su %s (mode=%s)", target, self._mode)
+        self._log("monitor avviato su %s (mode=%s)", target, self._mode)
         if process_existing:
             self.process_existing(target)
         status = self.status()
@@ -165,23 +178,18 @@ class Watcher:
         return status
 
     def stop(self) -> Dict[str, Any]:
-        observer = self._observer
-        self._observer = None
+        observer = self._take_observer()
         self._run_event.clear()
-        if observer is not None:
-            try:
-                observer.stop()
-                observer.join(timeout=5.0)
-            except Exception:  # pragma: no cover - watchdog edge
-                LOGGER.exception("stop dell'observer fallito")
-        thread = self._thread
-        self._thread = None
-        if thread is not None and thread.is_alive():
-            thread.join(timeout=5.0)
+        self._stop_observer(observer)
+        # Sveglia subito il loop (attende al massimo IDLE_WAIT_S) prima del join.
         try:
             self._events.put_nowait(None)
         except queue.Full:  # pragma: no cover
             pass
+        thread = self._thread
+        self._thread = None
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=5.0)
         with self._lock:
             was_running = self._running
             self._running = False
@@ -189,11 +197,34 @@ class Watcher:
             self._pending = {}
             self._session_seen = {}
         if was_running:
-            LOGGER.info("monitor fermato (%s)", self.directory)
+            self._log("monitor fermato (%s)", self.directory)
         status = self.status()
         if was_running:
             self._notify(status)
         return status
+
+    # ---------------------------------------------------------- observer utils
+    def _take_observer(self):
+        with self._observer_lock:
+            observer = self._observer
+            self._observer = None
+            return observer
+
+    def _stop_observer(self, observer) -> None:
+        if observer is None:
+            return
+        try:
+            observer.stop()
+            observer.join(timeout=5.0)
+        except Exception:  # pragma: no cover - watchdog edge
+            LOGGER.exception("stop dell'observer fallito")
+
+    def _log(self, message: str, *args) -> None:
+        """Log di ciclo: DEBUG quando ``quiet_logs`` e' attivo."""
+        if self._quiet:
+            LOGGER.debug(message, *args)
+        else:
+            LOGGER.info(message, *args)
 
     # -------------------------------------------------------------- existing
     def process_existing(self, directory: Optional[str] = None) -> Dict[str, Any]:
@@ -246,7 +277,12 @@ class Watcher:
             0, int(getattr(monitor, "stability_ms", DEFAULT_STABILITY_MS) or 0)
         )
         self._poll_interval_s = max(
-            0.5, float(getattr(monitor, "poll_interval_s", DEFAULT_POLL_INTERVAL_S) or 0.5)
+            MIN_POLL_INTERVAL_S,
+            float(getattr(monitor, "poll_interval_s", DEFAULT_POLL_INTERVAL_S) or 0.0),
+        )
+        self._quiet = bool(getattr(monitor, "quiet_logs", True))
+        self._idle_stop_minutes = max(
+            0, int(getattr(monitor, "idle_stop_minutes", 0) or 0)
         )
         globs = getattr(monitor, "ignore_globs", None)
         self._ignore_globs = (
@@ -263,7 +299,7 @@ class Watcher:
         requested = requested.strip().lower()
         if requested in ("native", "polling"):
             if requested == "native" and _is_unc(directory):
-                LOGGER.info("path UNC: forzo il polling per %s", directory)
+                LOGGER.debug("path UNC: forzo il polling per %s", directory)
                 return "polling"
             return requested
         if _is_unc(directory):
@@ -299,17 +335,66 @@ class Watcher:
 
     # ------------------------------------------------------------------ events
     def _monitor_loop(self) -> None:
+        """Loop event-driven: si sveglia solo alla prossima scadenza utile.
+
+        Nessun tick fisso: quando non c'e' nulla in sospeso l'attesa e' lunga
+        (``IDLE_WAIT_S``), quando un file attende la stabilita' si sveglia
+        esattamente alla scadenza.
+        """
         while self._run_event.is_set():
+            timeout = self._next_wait()
             try:
-                path = self._events.get(timeout=TICK_S)
+                path = self._events.get(timeout=timeout)
             except queue.Empty:
                 path = None
             if path:
                 self._schedule(path)
             self._process_pending()
-            if self._manual_scan and time.time() >= self._next_scan:
-                self._next_scan = time.time() + self._poll_interval_s
+            now = time.time()
+            if self._manual_scan and now >= self._next_scan:
+                self._next_scan = now + self._poll_interval_s
                 self._scan_directory()
+            if self._idle_expired(now):
+                self._stop_from_idle()
+                return
+
+    def _next_wait(self) -> float:
+        """Secondi da attendere prima della prossima azione utile."""
+        deadlines: List[float] = []
+        with self._lock:
+            pending = list(self._pending.values())
+        if pending:
+            stability = self._stability_ms / 1000.0
+            deadlines = [entry["last_change"] + stability for entry in pending]
+        if self._manual_scan:
+            deadlines.append(self._next_scan)
+        if not deadlines:
+            return IDLE_WAIT_S
+        remaining = min(deadlines) - time.time()
+        return max(0.05, min(remaining, IDLE_WAIT_S))
+
+    def _idle_expired(self, now: float) -> bool:
+        if self._idle_stop_minutes <= 0:
+            return False
+        with self._lock:
+            busy = bool(self._pending)
+        if busy:
+            return False
+        return (now - self._last_activity) >= self._idle_stop_minutes * 60.0
+
+    def _stop_from_idle(self) -> None:
+        observer = self._take_observer()
+        self._stop_observer(observer)
+        self._run_event.clear()
+        self._thread = None
+        with self._lock:
+            self._running = False
+            self._mode = "none"
+            self._pending = {}
+        self._log(
+            "monitor fermato dopo %d minuti di inattivita'", self._idle_stop_minutes
+        )
+        self._notify(self.status())
 
     def _drain_events(self) -> None:
         while True:
@@ -323,6 +408,7 @@ class Watcher:
             entries = list(os.scandir(self.directory))
         except OSError:
             return
+        LOGGER.debug("monitor: scansione di %s (%d voci)", self.directory, len(entries))
         for entry in entries:
             try:
                 if entry.is_file(follow_symlinks=False):
@@ -353,9 +439,11 @@ class Watcher:
                     "added": now,
                 }
                 self._pending[key] = entry
+                self._last_activity = now
             elif (entry["size"], entry["mtime_ns"]) != stamp:
                 entry["size"], entry["mtime_ns"] = stamp
                 entry["last_change"] = now
+                self._last_activity = now
 
     def _process_pending(self) -> None:
         now = time.time()
@@ -410,6 +498,8 @@ class Watcher:
                 "mtime_ns": fingerprint[1],
             }
             self._processed_session += 1
+            self._last_event_ts = time.time()
+            self._last_activity = time.time()
             self._trim_processed()
         self._save_processed()
         LOGGER.info("monitor: accodato %s", os.path.basename(path))

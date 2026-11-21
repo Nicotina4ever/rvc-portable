@@ -481,6 +481,20 @@ export const cloudView = {
         androidData = (result && result.status) || androidData;
         await refreshAndroid();
         toast.success(t("android.presetDone"));
+        const monitor = (state.settings && state.settings.monitor) || {};
+        if (!monitor.auto_start) {
+          const enable = await confirmModal({
+            title: t("android.autostartAskTitle"),
+            message: t("android.autostartAsk"),
+            detail: t("android.autostartAskDetail"),
+            confirmLabel: t("android.autostartYes"),
+            cancelLabel: t("android.autostartNo"),
+          });
+          if (enable) {
+            await patchSettings({ monitor: { auto_start: true } }).catch(() => null);
+            toast.success(t("android.autostartEnabled"));
+          }
+        }
       } catch (err) {
         toast.error(err);
       } finally {

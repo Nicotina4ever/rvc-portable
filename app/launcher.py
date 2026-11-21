@@ -192,12 +192,18 @@ def _build_engine(paths: AppPaths, manager: SettingsManager, logger):
 
 
 def _autostart_monitor(manager, watcher, logger) -> None:
-    """Avvia il monitoraggio all'apertura se configurato (flusso Dropbox/Android)."""
+    """Avvia il monitoraggio all'apertura solo con consenso esplicito.
+
+    Default: spento. Il flusso telefono/Dropbox richiede il watcher, ma non deve
+    partire mai da solo: chi lo vuole lo attiva dal tab Monitor (o dal preset,
+    che chiede conferma).
+    """
     if watcher is None:
         return
     try:
         settings = manager.settings
-        if not settings.monitor.enabled_on_start:
+        if not settings.monitor.auto_start:
+            logger.debug("monitor: avvio automatico disattivato (avvio manuale)")
             return
         directory = str(settings.audio.input_dir or "")
         if not directory or not os.path.isdir(directory):

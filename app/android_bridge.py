@@ -657,7 +657,7 @@ def prepare(manager: SettingsManager, app_paths=None, shared_dir: str = "", watc
             "output_format": "wav",
         },
         "cloud": {"local_path": paths["config_path"], "hot_reload": True},
-        "monitor": {"ignore_output_dir": True, "enabled_on_start": True},
+        "monitor": {"ignore_output_dir": True},
     }
     if not manager.settings.audio.model_path and entries:
         first = entries[0]

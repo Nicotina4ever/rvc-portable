@@ -43,8 +43,10 @@ I percorsi predefiniti dell'app sono:
    - imposta le cartelle input/output dell'app su quelle condivise;
    - genera `modelli.txt` con i modelli trovati in `Modelli/` (e nelle cartelle extra);
    - scrive `config.json` compatibile con Android;
-   - attiva hot-reload config e **avvio automatico del monitoraggio** all'apertura.
-5. Chiudi e riapri l'app (o avvia il monitor dalla Dashboard): da questo momento ogni file che
+   - attiva l'hot-reload della config.
+5. Il monitoraggio **non** parte più da solo: serve per ricevere i file dal telefono, quindi il
+   preset chiede conferma («Attivare l'avvio automatico?»). Se accetti, il PC resta in ascolto
+   all'apertura; altrimenti avvii il monitor a mano dal tab Monitor. Da quel momento ogni file che
    arriva in `AudioIn` viene convertito e scritto in `AudioOut` **con lo stesso nome**.
 
 Non serve configurare OAuth sul PC: il PC usa solo il filesystem sincronizzato da Dropbox.
@@ -152,7 +154,7 @@ file esiste davvero sul PC (altrimenti la chiave viene ignorata e lo si vede nei
 | Sintomo | Causa | Rimedio |
 |---|---|---|
 | Il telefono dice "in attesa" e non arriva nulla | Dropbox sul PC non sincronizza `TestRVC` | apri Dropbox desktop, verifica account e cartella selettiva; controlla `AudioIn` locale |
-| Il file arriva in `AudioIn` ma non viene convertito | monitor non attivo | Dashboard → Avvia monitoraggio; oppure riattiva il preset (avvio automatico) |
+| Il file arriva in `AudioIn` ma non viene convertito | monitor non attivo | Dashboard → Avvia monitoraggio; oppure attiva «Avvio automatico» nel tab Monitor |
 | Output assente in `AudioOut` | conversione fallita | guarda `data/logs/engine.log` e `app.log`; la Dashboard mostra lo stato del job |
 | `config.json` del telefono non applicato | hot-reload spento o percorso errato | tab Cloud → verifica "Percorso locale o NAS" = `…\TestRVC\config.json`, hot reload attivo; premi **Applica config** |
 | `modelli.txt` non aggiornato | modelli aggiunti dopo il preset | **Sincronizza modelli** |

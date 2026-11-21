@@ -51,11 +51,22 @@ export const monitorView = {
       checked: Boolean(state.settings && state.settings.monitor && state.settings.monitor.process_existing),
       hint: t("monitor.processExistingHint"),
     });
+    const autoStartSwitch = switchField({
+      id: "mon-autostart",
+      label: t("monitor.autoStart"),
+      checked: Boolean(state.settings && state.settings.monitor && state.settings.monitor.auto_start),
+      hint: t("monitor.autoStartHint"),
+    });
     const startButton = btn(t("monitor.start"), { variant: "primary", iconName: "play" });
     const stopButton = btn(t("monitor.stop"), { variant: "secondary", iconName: "stop" });
     const processButton = btn(t("monitor.processExisting"), { variant: "secondary", iconName: "inbox" });
     const controlsBody = div("monitor-controls");
-    controlsBody.append(dirField.el, processExistingSwitch.el, div("button-row", startButton, stopButton, processButton));
+    controlsBody.append(
+      dirField.el,
+      autoStartSwitch.el,
+      processExistingSwitch.el,
+      div("button-row", startButton, stopButton, processButton)
+    );
     const controlsCard = card({ title: t("monitor.title"), className: "monitor-card" });
     controlsCard.body.appendChild(controlsBody);
     const controlAlert = div("inline-alert", { hidden: true });
@@ -162,6 +173,8 @@ export const monitorView = {
         return;
       }
       const running = Boolean(monitor.running);
+      const idle = Number(monitor.idle_s || 0);
+      const lastEvent = Number(monitor.last_event || 0);
       appendAll(
         statusBody,
         div(
@@ -173,10 +186,29 @@ export const monitorView = {
         div(
           "status-stats",
           div("status-stat", span("stat-value", String(monitor.processed_session || 0)), span("stat-label", t("monitor.processedLabel"))),
-          div("status-stat", span("stat-value", String(monitor.queued || 0)), span("stat-label", t("monitor.queuedLabel")))
+          div("status-stat", span("stat-value", String(monitor.queued || 0)), span("stat-label", t("monitor.queuedLabel"))),
+          running
+            ? div("status-stat", span("stat-value", formatIdle(idle)), span("stat-label", t("monitor.idleLabel")))
+            : null
         ),
-        h("p", { class: "status-message", title: monitor.dir || "", text: monitor.dir ? t("monitor.dir") + ": " + monitor.dir : t("monitor.dir") + ": —" })
+        h("p", { class: "status-message", title: monitor.dir || "", text: monitor.dir ? t("monitor.dir") + ": " + monitor.dir : t("monitor.dir") + ": —" }),
+        running
+          ? h("p", {
+              class: "status-message",
+              text: lastEvent > 0
+                ? t("monitor.lastEvent", { time: formatClock(lastEvent) })
+                : t("monitor.lastEventNone"),
+            })
+          : null
       );
+    }
+
+    function formatIdle(seconds) {
+      const total = Math.max(0, Math.round(seconds));
+      if (total < 60) return total + "s";
+      const minutes = Math.floor(total / 60);
+      if (minutes < 60) return minutes + "m";
+      return Math.floor(minutes / 60) + "h " + (minutes % 60) + "m";
     }
 
     function renderControls() {
@@ -196,6 +228,8 @@ export const monitorView = {
         controlAlert.textContent = "";
       }
       if (!dirField.getValue() && monitor.dir) dirField.setValue(monitor.dir);
+      const autostart = Boolean(state.settings && state.settings.monitor && state.settings.monitor.auto_start);
+      if (autoStartSwitch.getValue() !== autostart) autoStartSwitch.setValue(autostart);
     }
 
     async function withBusy(button, labelBusy, action) {
@@ -280,6 +314,16 @@ export const monitorView = {
     stopButton.addEventListener("click", stopMonitor);
     processButton.addEventListener("click", () => processExistingFiles());
     refreshButton.addEventListener("click", refresh);
+    autoStartSwitch.input.addEventListener("change", async () => {
+      const value = autoStartSwitch.getValue();
+      try {
+        await patchSettings({ monitor: { auto_start: value } });
+        toast.success(value ? t("monitor.autoStartOn") : t("monitor.autoStartOff"));
+      } catch (err) {
+        autoStartSwitch.setValue(!value);
+        toast.error(err);
+      }
+    });
     levelSelect.select.addEventListener("change", () => {
       filterLevel = levelSelect.getValue();
       rebuildLogs();
