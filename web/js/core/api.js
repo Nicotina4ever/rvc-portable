@@ -210,6 +210,24 @@ export const endpoints = {
   androidPreset: (sharedDir) => api.post("/api/android/preset", { shared_dir: sharedDir || "" }),
   androidSync: () => api.post("/api/android/sync", {}),
   androidImport: () => api.post("/api/android/import", {}),
+  trainingStatus: () => api.get("/api/training"),
+  trainingAnalyze: (source) => api.post("/api/training/analyze", { source: source || "" }, { timeoutMs: 600000 }),
+  trainingStart: (payload) => api.post("/api/training", payload || {}),
+  trainingGet: (id) => api.get("/api/training/" + encodeURIComponent(id)),
+  trainingLog: (id, offset = 0, limit = 200) =>
+    api.get(
+      "/api/training/" +
+        encodeURIComponent(id) +
+        "/log?offset=" +
+        encodeURIComponent(offset) +
+        "&limit=" +
+        encodeURIComponent(limit)
+    ),
+  trainingCancel: (id) => api.post("/api/training/" + encodeURIComponent(id) + "/cancel", {}),
+  trainingResume: (id) => api.post("/api/training/" + encodeURIComponent(id) + "/resume", {}),
+  trainingTest: (id, sample) =>
+    api.post("/api/training/" + encodeURIComponent(id) + "/test", { sample: sample || "" }),
+  trainingDelete: (id) => api.del("/api/training/" + encodeURIComponent(id)),
   eventsHistory: (since = 0) => api.get("/api/events/history?since=" + encodeURIComponent(since)),
   fileDialog: (kind, title, initial) =>
     api.post("/api/files/dialog", { kind, title: title || "", initial: initial || "" }, { timeoutMs: 600000 }),

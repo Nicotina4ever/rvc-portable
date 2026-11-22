@@ -159,6 +159,52 @@ class MonitorSettings(BaseModel):
         return value
 
 
+class TrainingSettings(BaseModel):
+    """Addestramento modelli RVC (pipeline completa sul PC)."""
+
+    enabled: bool = True
+    auto_download_assets: bool = True
+    pretrained_dir: str = ""
+    assets_dir: str = ""
+    sample_rate: int = 48000
+    version: str = "v2"
+    f0: bool = True
+    f0_method: str = "rmvpe"
+    epochs: int = Field(250, ge=10, le=2000)
+    batch_size: int = Field(6, ge=1, le=64)
+    save_every: int = Field(20, ge=1, le=500)
+    keep_intermediate: bool = True
+    exclusive_gpu: bool = True
+
+    class Config:
+        extra = "ignore"
+
+    @validator("sample_rate")
+    def _sample_rate(cls, value):  # noqa: N805
+        number = int(value or 0)
+        if number not in (32000, 40000, 48000):
+            raise ValueError("sample_rate supportati: 32000, 40000, 48000")
+        return number
+
+    @validator("version")
+    def _version(cls, value):  # noqa: N805
+        text = str(value or "").strip().lower()
+        if text not in ("v1", "v2"):
+            raise ValueError("version supportate: v1, v2")
+        return text
+
+    @validator("f0_method")
+    def _f0_method(cls, value):  # noqa: N805
+        text = str(value or "").strip().lower()
+        if text not in ("rmvpe", "pm"):
+            raise ValueError("f0_method supportati: rmvpe, pm")
+        return text
+
+    @validator("pretrained_dir", "assets_dir", pre=True)
+    def _dir(cls, value):  # noqa: N805
+        return _clean_path(value or "")
+
+
 class DropboxSettings(BaseModel):
     app_key: str = ""
     remote_path: str = "/NLTools/RVC/config.json"
@@ -273,6 +319,7 @@ class Settings(BaseModel):
     monitor: MonitorSettings = Field(default_factory=MonitorSettings)
     cloud: CloudSettings = Field(default_factory=CloudSettings)
     android: AndroidSettings = Field(default_factory=AndroidSettings)
+    training: TrainingSettings = Field(default_factory=TrainingSettings)
     ui: UISettings = Field(default_factory=UISettings)
 
     class Config:

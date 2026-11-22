@@ -1281,3 +1281,112 @@
     flex-basis: 100%;
   }
 }
+
+/* ============================================================ TRAINING */
+
+.training-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 980px;
+}
+
+.training-card .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.training-report:empty {
+  display: none;
+}
+
+.training-advanced {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2);
+  padding: 10px 12px;
+}
+
+.training-advanced summary {
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.training-advanced[open] summary {
+  margin-bottom: 10px;
+}
+
+.training-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.training-job-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.training-job {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2);
+  background: var(--surface-2);
+}
+
+.training-job.is-selected {
+  border-color: var(--accent);
+}
+
+.training-job-main {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.training-job-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.training-job-meta {
+  color: var(--text-mute);
+  font-size: 0.78rem;
+}
+
+.training-log {
+  margin: 0;
+  padding: 10px;
+  max-height: 260px;
+  overflow: auto;
+  border-radius: var(--radius-2);
+  background: var(--bg-deep, #070b17);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-mono, ui-monospace, "Cascadia Mono", Consolas, monospace);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 620px) {
+  .training-job {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -139,6 +139,10 @@ class AppPaths:
         return os.path.join(self.data_dir, "browser")
 
     @property
+    def training_dir(self) -> str:
+        return os.path.join(self.data_dir, "training")
+
+    @property
     def session_path(self) -> str:
         return os.path.join(self.state_dir, "session.json")
 

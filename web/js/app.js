@@ -27,7 +27,7 @@ import { initModal, panelModal } from "./components/modal.js";
 import { btn, emptyState } from "./components/ui.js";
 import { initRouter, show as showView, refreshCurrentView, currentViewId, currentView, VIEW_IDS } from "./core/router.js";
 
-const ALLOWED_VIEWS = ["dashboard", "config", "monitor", "models", "cloud", "advanced"];
+const ALLOWED_VIEWS = ["dashboard", "config", "monitor", "models", "training", "cloud", "advanced"];
 const LANG_KEY = "rvc.lang";
 
 const refs = {};

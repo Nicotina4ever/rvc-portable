@@ -105,6 +105,7 @@ def run(paths: AppPaths, args) -> int:
     watcher = _build_watcher(paths, manager, queue, logger)
     config_sync = _build_config_sync(manager, logger)
     status_publisher = _build_status_publisher(manager, engine, queue, watcher, config_sync, logger)
+    training_service = _build_training(paths, manager, queue, logger)
 
     app = create_app(
         paths=paths,
@@ -116,6 +117,7 @@ def run(paths: AppPaths, args) -> int:
         token=token,
         port=port,
         allow_lan=bool(args.allow_lan),
+        training_service=training_service,
     )
     app.state.config_sync = config_sync
     app.state.status_publisher = status_publisher
@@ -254,6 +256,17 @@ def _build_config_sync(manager, logger):
         return sync
     except Exception as exc:  # pragma: no cover - non blocca l'avvio
         logger.exception("config sync non inizializzabile: %s", exc)
+        return None
+
+
+def _build_training(paths, manager, queue, logger):
+    """Servizio di addestramento (coda + pipeline), opzionale e non bloccante."""
+    try:
+        from .training.manager import TrainingService
+
+        return TrainingService(paths, manager, job_queue=queue, bus=events.BUS)
+    except Exception as exc:  # pragma: no cover - non blocca l'avvio
+        logger.exception("servizio training non inizializzabile: %s", exc)
         return None
 
 

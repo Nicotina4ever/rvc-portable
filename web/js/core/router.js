@@ -6,6 +6,7 @@ import { dashboardView } from "../views/dashboard.js";
 import { configView } from "../views/config.js";
 import { monitorView } from "../views/monitor.js";
 import { modelsView } from "../views/models.js";
+import { trainingView } from "../views/training.js";
 import { cloudView } from "../views/cloud.js";
 import { advancedView } from "../views/advanced.js";
 import { setupView } from "../views/setup.js";
@@ -15,6 +16,7 @@ const VIEWS = {
   config: configView,
   monitor: monitorView,
   models: modelsView,
+  training: trainingView,
   cloud: cloudView,
   advanced: advancedView,
   setup: setupView,

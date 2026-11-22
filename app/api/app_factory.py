@@ -26,6 +26,7 @@ from .routes import (
     models,
     monitor,
     system,
+    training,
 )
 from .routes import (
     settings as settings_routes,
@@ -47,6 +48,7 @@ def create_app(
     port: int,
     started_at: Optional[float] = None,
     allow_lan: bool = False,
+    training_service: Any = None,
 ) -> FastAPI:
     app = FastAPI(
         title="RVC Portable API",
@@ -68,6 +70,7 @@ def create_app(
     app.state.locales = LocaleCatalog(paths.locales_dir)
     app.state.bus = bus or EventBus()
     app.state.shutdown_callback = None
+    app.state.training_service = training_service
 
     app.add_middleware(
         LocalSecurityMiddleware,
@@ -96,6 +99,7 @@ def create_app(
         monitor,
         cloud,
         android,
+        training,
         locales,
     ):
         app.include_router(module.router)

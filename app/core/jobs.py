@@ -99,6 +99,7 @@ class JobQueue:
         self._current: Optional[str] = None
         self._completed_keys: Dict[str, float] = {}
         self._loaded_model: Optional[tuple] = None
+        self._hold = threading.Event()
         self._load()
 
     # ---------------------------------------------------------------- lifecycle
@@ -133,6 +134,22 @@ class JobQueue:
     @property
     def current_job_id(self) -> Optional[str]:
         return self._current
+
+    # ------------------------------------------------------------------- hold
+    def hold(self, reason: str = "") -> None:
+        """Blocca l'avvio di nuovi job (training in corso sulla stessa GPU)."""
+        self._hold.set()
+        LOGGER.info("job queue in pausa%s", ": " + reason if reason else "")
+
+    def release(self) -> None:
+        if not self._hold.is_set():
+            return
+        self._hold.clear()
+        LOGGER.info("job queue riattivata")
+
+    @property
+    def held(self) -> bool:
+        return self._hold.is_set()
 
     # -------------------------------------------------------------------- api
     def enqueue(
@@ -298,6 +315,9 @@ class JobQueue:
     def _worker_loop(self) -> None:
         LOGGER.info("job queue avviata")
         while self._running:
+            if self._hold.is_set():
+                time.sleep(0.2)
+                continue
             try:
                 job_id = self._queue.get(timeout=0.5)
             except queue.Empty:

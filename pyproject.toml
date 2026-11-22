@@ -27,6 +27,7 @@ exclude = [
     "Modelli",
     "Progetto",
     "web",
+    "app/training/vendor",
 ]
 
 [tool.ruff.lint]
