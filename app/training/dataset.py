@@ -224,6 +224,38 @@ def inspect_source(source: str) -> Dict[str, Any]:
         "warnings": warnings,
         "errors": errors,
     }
+    if os.path.isdir(path) or os.path.isfile(path):
+        try:
+            from .curate import quick_quality
+
+            quality = quick_quality(path, sample=20, seconds=15.0)
+            report["quality"] = quality
+            sampled = int(quality.get("files") or 0)
+            if sampled:
+                if int(quality.get("music_files") or 0) > 0:
+                    warnings.append(
+                        "%d/%d file sembrano contenere musica o jingle: usare "
+                        "tools/curate_dataset.py per pulire il dataset."
+                        % (int(quality["music_files"]), sampled)
+                    )
+                if int(quality.get("clipped_files") or 0) > 0:
+                    warnings.append(
+                        "%d/%d file saturano: abbassa il volume in ripresa o scarta quei file."
+                        % (int(quality["clipped_files"]), sampled)
+                    )
+                if int(quality.get("noisy_files") or 0) > 0:
+                    warnings.append(
+                        "%d/%d file hanno molto rumore/spettro piatto: valuta la pulizia."
+                        % (int(quality["noisy_files"]), sampled)
+                    )
+                if int(quality.get("stereo_files") or 0) > 0:
+                    warnings.append(
+                        "%d/%d file sono stereo: il training li converte in mono, "
+                        "ma la voce deve essere centrata."
+                        % (int(quality["stereo_files"]), sampled)
+                    )
+        except Exception:
+            pass
     return _verdict(report)
 
 

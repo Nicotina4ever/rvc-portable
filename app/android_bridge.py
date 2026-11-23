@@ -609,8 +609,11 @@ def scan_entries(manager: SettingsManager, app_paths=None) -> Dict[str, Any]:
     roots = _roots_for_scan(manager, app_paths)
     if not roots:
         return {"roots": [], "models": [], "warnings": ["nessuna cartella modelli"]}
+    overrides = getattr(manager.settings.audio, "index_overrides", {}) or {}
     return model_scan.scan_models(
-        roots, default_index_hint=str(manager.settings.audio.index_path or "")
+        roots,
+        default_index_hint=str(manager.settings.audio.index_path or ""),
+        index_overrides=dict(overrides) if isinstance(overrides, dict) else {},
     )
 
 

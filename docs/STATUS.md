@@ -7,7 +7,7 @@ cosa resta da verificare**. Aggiornalo a ogni rilascio.
 
 | Componente | Versione | Release |
 |---|---|---|
-| RVC Portable (PC) | **3.2.0** | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.2.0> |
+| RVC Portable (PC) | **3.3.0** | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.0> |
 | Runtime Windows | 3.0.0 (invariato) | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/runtime-v3.0.0> |
 | RVC-Droid (Android) | **4.0** | <https://github.com/Nicotina4ever/rvc-droid/releases/tag/v4.0> |
 | Motore | rvc-python 0.1.5 + fairseq 0.12.2 + torch 2.0.0+cu118 | — |
@@ -24,6 +24,8 @@ cosa resta da verificare**. Aggiornalo a ogni rilascio.
 - **Auto-test parametri** (`app/tuning/auto_tune.py`, `--auto` dell'helper): griglia
   metodo/index/protect misurata su intonazione, timbro, articolazione e clipping.
 - **Formant shift** (−12…+12) via pyworld, disponibile su PC, Android e REAPER.
+- **Indice manuale per modello**: dalla vista Modelli puoi assegnare qualsiasi `.index` a un
+  `.pth`, anche con nome diverso; l'elenco degli indici è sempre disponibile.
 - **Monitor silenzioso**: niente avvio automatico, log di ciclo a DEBUG, stop su inattività.
 - **Distribuzione Linux/macOS**: archivi dedicati, `setup.sh`/`setup.command`, download pesi base.
 
@@ -47,6 +49,7 @@ cosa resta da verificare**. Aggiornalo a ogni rilascio.
 | Formant su conversione reale | sì (`--formant 2`) |
 | Build APK release | sì, firmato (versionCode 8, versionName 4.0) |
 | Dataset spot | 502 file, **165,7 min**, 48 kHz, pronto (1 file <3 s ignorato) |
+| Cura dataset (campione) | analisi qualità/musica/duplicati verificata su 12 file |
 
 ## Cosa NON è stato verificato
 

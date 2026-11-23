@@ -46,8 +46,9 @@ def default_models_root() -> str:
 def scan_models(
     roots: Optional[Iterable[str]] = None,
     default_index_hint: str = "",
+    index_overrides: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
-    """Scansiona le radici e restituisce ``{"roots", "models", "warnings"}``."""
+    """Scansiona le radici e restituisce ``{"roots", "models", "indexes", "warnings"}``."""
     warnings: List[str] = []
     root_list = _normalize_roots(roots, warnings)
     pth_files: List[str] = []
@@ -62,19 +63,28 @@ def scan_models(
         index_files.extend(found_indexes)
 
     hint = _normalize_hint(default_index_hint, warnings)
+    overrides = _normalize_overrides(index_overrides, warnings)
 
     entries: List[Dict[str, Any]] = []
     used_indexes = set()
     for pth in _dedupe_sorted(pth_files):
         entry, matched = _build_entry(
-            pth, index_files, used_indexes, hint, root_list, warnings
+            pth, index_files, used_indexes, hint, root_list, warnings, overrides
         )
         if matched:
             used_indexes.add(matched)
         entries.append(entry)
 
     entries.sort(key=lambda item: (item["name"].lower(), item["path"].lower()))
-    return {"roots": root_list, "models": entries, "warnings": warnings}
+    indexes = sorted(
+        _dedupe_sorted(index_files), key=lambda item: os.path.basename(item).lower()
+    )
+    return {
+        "roots": root_list,
+        "models": entries,
+        "indexes": indexes,
+        "warnings": warnings,
+    }
 
 
 def guess_version(path: str) -> str:
@@ -145,6 +155,27 @@ def _walk_root(root: str, warnings: List[str]) -> Tuple[List[str], List[str]]:
     return models, indexes
 
 
+def _normalize_overrides(
+    overrides: Optional[Dict[str, str]], warnings: List[str]
+) -> Dict[str, str]:
+    """Chiavi normalizzate per confronto, valori assoluti e verificati."""
+    normalized: Dict[str, str] = {}
+    if not isinstance(overrides, dict):
+        return normalized
+    for model, index in overrides.items():
+        model_path = os.path.abspath(os.path.expanduser(str(model or "").strip()))
+        index_path = os.path.abspath(os.path.expanduser(str(index or "").strip()))
+        if not model_path or not index_path:
+            continue
+        if not os.path.isfile(index_path) or not index_path.lower().endswith(
+            INDEX_EXTENSION
+        ):
+            warnings.append("indice manuale non trovato: %s" % index_path)
+            continue
+        normalized[os.path.normcase(model_path)] = index_path
+    return normalized
+
+
 def _build_entry(
     pth_path: str,
     index_files: List[str],
@@ -152,26 +183,37 @@ def _build_entry(
     hint: str,
     roots: List[str],
     warnings: List[str],
+    overrides: Optional[Dict[str, str]] = None,
 ) -> Tuple[Dict[str, Any], Optional[str]]:
     name = os.path.splitext(os.path.basename(pth_path))[0]
     entry_warnings: List[str] = []
-    candidates = [
-        index
-        for index in index_files
-        if index not in used_indexes and _index_matches(name, index)
-    ]
+    override = (overrides or {}).get(os.path.normcase(os.path.abspath(pth_path)), "")
     matched = ""
-    if len(candidates) == 1:
-        matched = candidates[0]
-    elif len(candidates) > 1:
-        matched, distinct = _pick_best_index(name, pth_path, candidates)
-        if distinct > 1:
-            entry_warnings.append(
-                "piu' indici compatibili: uso %s" % os.path.basename(matched)
-            )
-    elif hint and _index_matches(name, hint) and hint not in used_indexes:
-        matched = hint
-        entry_warnings.append("indice assegnato dal percorso predefinito")
+    index_source = ""
+    if override:
+        matched = override
+        index_source = "override"
+        entry_warnings.append("indice assegnato manualmente")
+    if not matched:
+        candidates = [
+            index
+            for index in index_files
+            if index not in used_indexes and _index_matches(name, index)
+        ]
+        if len(candidates) == 1:
+            matched = candidates[0]
+            index_source = "name"
+        elif len(candidates) > 1:
+            matched, distinct = _pick_best_index(name, pth_path, candidates)
+            index_source = "name"
+            if distinct > 1:
+                entry_warnings.append(
+                    "piu' indici compatibili: uso %s" % os.path.basename(matched)
+                )
+        elif hint and _index_matches(name, hint) and hint not in used_indexes:
+            matched = hint
+            index_source = "hint"
+            entry_warnings.append("indice assegnato dal percorso predefinito")
 
     if not matched:
         entry_warnings.append("indice opzionale assente")
@@ -188,6 +230,7 @@ def _build_entry(
         "name": name,
         "path": pth_path,
         "index_path": matched,
+        "index_source": index_source,
         "size_mb": size_mb,
         "version_guess": guess_version(pth_path),
         "source": _source_label(pth_path, roots),

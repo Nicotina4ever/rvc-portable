@@ -195,6 +195,7 @@ export const endpoints = {
   models: () => api.get("/api/models"),
   modelsScan: (roots) => api.post("/api/models/scan", roots ? { roots } : {}),
   modelsProbe: (paths) => api.post("/api/models/probe", { paths }),
+  modelsIndex: (model, indexPath) => api.put("/api/models/index", { model, index: indexPath || "" }),
   hardware: () => api.get("/api/hardware"),
   diagnostics: (force = false) => api.get("/api/system/diagnostics?force=" + (force ? "true" : "false")),
   shutdown: () => api.post("/api/system/shutdown", {}, { timeoutMs: 5000 }),

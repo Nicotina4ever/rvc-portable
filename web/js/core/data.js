@@ -124,6 +124,7 @@ export async function loadModels(options = {}) {
       models: {
         roots: Array.isArray(data.roots) ? data.roots : [],
         models: Array.isArray(data.models) ? data.models : [],
+        indexes: Array.isArray(data.indexes) ? data.indexes : [],
         warnings: Array.isArray(data.warnings) ? data.warnings : [],
       },
       modelsError: null,

@@ -1390,3 +1390,24 @@
     align-items: flex-start;
   }
 }
+
+/* ============================================================ MODELS: indice manuale */
+
+.model-index-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.model-index-label {
+  font-size: 0.78rem;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+
+.model-index-select {
+  flex: 1;
+  min-width: 180px;
+}

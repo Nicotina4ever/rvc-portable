@@ -2,6 +2,28 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.3.0] — 2026-11-23
+
+Cura del dataset e indice manuale per modello.
+
+### Aggiunto
+
+- **`tools/curate_dataset.py`**: analisi qualità (loudness, clipping, silenzio, rumore, musica),
+  deduplica (SHA-256, simili opzionali), report JSON/CSV/MD e cartelle `clean/`, `review/`,
+  `validation/`; guida in [docs/DATASET.md](docs/DATASET.md).
+- **Analisi dataset arricchita**: "Analizza dataset" ora riporta anche un campione di qualità
+  (musica probabile, saturazione, rumore, stereo) con avvisi operativi.
+- **Indice manuale per modello**: nella vista Modelli ogni `.pth` può ricevere un qualsiasi
+  `.index` dall'elenco completo; l'associazione è salvata in `audio.index_overrides` e usata
+  anche da `modelli.txt` per Android.
+- API `PUT /api/models/index`; `GET /api/models` restituisce anche `indexes`.
+
+### Note
+
+- Il riconoscimento musica è un'euristica prudente (ritmo + percussività): i file dubbi vanno
+  in `review/` e vanno ascoltati.
+- Nessuna modifica al motore o al runtime.
+
 ## [3.2.0] — 2026-11-23
 
 Addestramento integrato, integrazione REAPER, auto-test dei parametri e distribuzione Linux/macOS.

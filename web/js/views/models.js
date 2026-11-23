@@ -3,6 +3,7 @@ import { h, div, span, icon, clear, basename, dirname, formatMb, timeAgo, trunca
 import { t, errorFull } from "../core/i18n.js";
 import { state, subscribe } from "../core/store.js";
 import { loadModels } from "../core/data.js";
+import { endpoints } from "../core/api.js";
 import { patchSettings } from "../core/settings.js";
 import { card, btn, badge, emptyState, loadingBlock } from "../components/ui.js";
 import { searchField } from "../components/fields.js";
@@ -88,7 +89,12 @@ export const modelsView = {
         div(
           "model-title",
           h("h3", { class: "model-name", title: model.path || "", text: model.name || basename(model.path) || "—" }),
-          div("model-badges", badge(version, "info"), model.has_index ? badge(t("models.indexOk"), "ok") : badge(t("models.indexMissing"), "warn"))
+          div(
+            "model-badges",
+            badge(version, "info"),
+            model.has_index ? badge(t("models.indexOk"), "ok") : badge(t("models.indexMissing"), "warn"),
+            model.index_source === "override" ? badge(t("models.indexManual"), "accent") : null
+          )
         ),
         inUse ? badge(t("models.inUse"), "ok") : null
       );
@@ -108,6 +114,30 @@ export const modelsView = {
         const list = h("ul", { class: "model-warnings" });
         warnings.forEach((warning) => list.appendChild(h("li", { text: String(warning) })));
         body.appendChild(list);
+      }
+
+      const indexes = (state.models && state.models.indexes) || [];
+      if (indexes.length) {
+        const selector = h("select", {
+          class: "input model-index-select",
+          "aria-label": t("models.indexLabel"),
+        });
+        selector.appendChild(h("option", { value: "", text: t("models.indexAuto") }));
+        indexes.forEach((indexPath) => {
+          const option = h("option", { value: indexPath, text: basename(indexPath) || indexPath });
+          if (model.index_path && String(model.index_path).toLowerCase() === String(indexPath).toLowerCase()) {
+            option.selected = true;
+          }
+          selector.appendChild(option);
+        });
+        selector.addEventListener("change", () => changeIndex(model, selector.value));
+        body.appendChild(
+          div(
+            "model-index-row",
+            span("model-index-label", t("models.indexLabel")),
+            selector
+          )
+        );
       }
       const useButton = btn(inUse ? t("models.inUse") : t("models.use"), {
         variant: inUse ? "secondary" : "primary",
@@ -170,6 +200,19 @@ export const modelsView = {
           div("model-grid", entries.map((model) => modelCard(model)))
         );
         listHost.appendChild(groupNode);
+      }
+    }
+
+    async function changeIndex(model, indexPath) {
+      try {
+        await endpoints.modelsIndex(model.path, indexPath);
+        await loadModels();
+        if (currentModelPath() === String(model.path || "").toLowerCase()) {
+          await patchSettings({ audio: { index_path: indexPath || "" } });
+        }
+        toast.success(t("models.indexSaved"));
+      } catch (err) {
+        toast.show({ level: "error", message: t("models.indexSaveFailed"), detail: errorFull(err) });
       }
     }
 

@@ -46,6 +46,10 @@ class AudioSettings(BaseModel):
         description="cartelle aggiuntive in cui cercare modelli (es. Dropbox/Modelli)",
     )
     model_version: str = Field("v2", description="v1 oppure v2")
+    index_overrides: Dict[str, str] = Field(
+        default_factory=dict,
+        description="associazione manuale modello .pth -> indice .index",
+    )
     pitch: int = Field(0, ge=-24, le=24)
     method: str = "rmvpe"
     protect: float = Field(0.33, ge=0.0, le=0.5)
@@ -80,6 +84,18 @@ class AudioSettings(BaseModel):
                 continue
             seen.add(key)
             cleaned.append(path)
+        return cleaned
+
+    @validator("index_overrides", pre=True)
+    def _index_overrides(cls, value):  # noqa: N805
+        if not isinstance(value, dict):
+            return {}
+        cleaned: Dict[str, str] = {}
+        for model, index in value.items():
+            model_path = _clean_path(str(model or ""))
+            index_path = _clean_path(str(index or ""))
+            if model_path and index_path:
+                cleaned[model_path] = index_path
         return cleaned
 
     @validator("method")

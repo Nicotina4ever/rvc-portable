@@ -53,6 +53,11 @@ def _index_hint(request: Request) -> str:
     return str(deps.settings_manager(request).settings.audio.index_path or "")
 
 
+def _index_overrides(request: Request) -> Dict[str, str]:
+    value = getattr(deps.settings_manager(request).settings.audio, "index_overrides", {})
+    return dict(value) if isinstance(value, dict) else {}
+
+
 def _resolve_roots(request: Request, raw_roots: Any) -> List[str]:
     default_roots = _default_roots(request)
     explicit = raw_roots is not None
@@ -108,9 +113,13 @@ def _normalize_scan_result(result: Any, roots: List[str]) -> Dict[str, Any]:
     result_roots = result.get("roots")
     if not isinstance(result_roots, list) or not result_roots:
         result_roots = roots
+    indexes = result.get("indexes")
+    if not isinstance(indexes, list):
+        indexes = []
     return {
         "roots": [str(item) for item in result_roots],
         "models": models,
+        "indexes": [str(item) for item in indexes],
         "warnings": [str(item) for item in warnings],
     }
 
@@ -126,7 +135,9 @@ def _run_scan(request: Request, raw_roots: Any) -> Dict[str, Any]:
             ],
         }
     try:
-        result = model_scan.scan_models(roots, _index_hint(request))
+        result = model_scan.scan_models(
+            roots, _index_hint(request), _index_overrides(request)
+        )
     except NotImplementedError as exc:
         raise ApiError(
             "model_invalid", NOT_AVAILABLE_MESSAGE, 503, {}, str(exc) or ""
@@ -168,6 +179,7 @@ def _fallback_entry(path: str) -> Dict[str, Any]:
         "name": name,
         "path": path,
         "index_path": "",
+        "index_source": "",
         "size_mb": round(size_bytes / (1024 * 1024), 1),
         "version_guess": version,
         "source": parent or "manuale",
@@ -219,7 +231,9 @@ def _probe_entries(request: Request, raw_paths: Any) -> Dict[str, Any]:
         {os.path.dirname(item) for item in unique}, key=lambda value: value.lower()
     )
     try:
-        result = model_scan.scan_models(roots, _index_hint(request))
+        result = model_scan.scan_models(
+            roots, _index_hint(request), _index_overrides(request)
+        )
     except NotImplementedError as exc:
         raise ApiError(
             "model_invalid", NOT_AVAILABLE_MESSAGE, 503, {}, str(exc) or ""
@@ -260,6 +274,44 @@ def scan_models(
 ):
     body = payload or {}
     return _run_scan(request, body.get("roots"))
+
+
+@router.put("/api/models/index")
+def set_model_index(
+    request: Request,
+    payload: Optional[Dict[str, Any]] = None,
+):
+    """Assegna (o azzera) manualmente l'indice di un modello."""
+    body = payload or {}
+    model = _normalize(body.get("model"))
+    raw_index = str(body.get("index") or "").strip()
+    index = _normalize(raw_index) if raw_index else ""
+    if not os.path.isfile(model) or not model.lower().endswith(".pth"):
+        raise ApiError(
+            "model_not_found",
+            "File modello .pth non trovato: %s" % model,
+            404,
+            {"model": model},
+        )
+    if index and (not os.path.isfile(index) or not index.lower().endswith(".index")):
+        raise ApiError(
+            "index_invalid",
+            "File indice .index non trovato: %s" % index,
+            422,
+            {"index": index},
+        )
+    manager = deps.settings_manager(request)
+    settings = manager.settings
+    overrides = dict(getattr(settings.audio, "index_overrides", {}) or {})
+    if index:
+        overrides[model] = index
+    else:
+        overrides.pop(model, None)
+    settings.audio.index_overrides = overrides
+    if os.path.normcase(settings.audio.model_path) == os.path.normcase(model):
+        settings.audio.index_path = index
+    manager.save(settings)
+    return _run_scan(request, None)
 
 
 @router.post("/api/models/probe")

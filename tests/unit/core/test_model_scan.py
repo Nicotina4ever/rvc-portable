@@ -130,3 +130,26 @@ def test_default_root_used_when_none(tmp_path, monkeypatch):
     )
     result = scan_models()
     assert [entry["name"] for entry in result["models"]] == ["default"]
+
+def test_manual_index_override(tmp_path):
+    root = tmp_path / "Modelli"
+    model = _touch(root / "voce.pth")
+    matching = _touch(root / "added_IVF8_Flat_nprobe_1_voce_v2.index")
+    other = _touch(root / "indice_condiviso.index")
+    result = scan_models([str(root)], index_overrides={model: other})
+    entry = _by_name(result)["voce"]
+    assert entry["index_path"] == other
+    assert entry["index_source"] == "override"
+    assert entry["has_index"] is True
+    assert any("manualmente" in warning for warning in entry["warnings"])
+    assert other in result["indexes"]
+    assert matching in result["indexes"]
+
+
+def test_invalid_index_override_is_ignored_with_warning(tmp_path):
+    root = tmp_path / "Modelli"
+    model = _touch(root / "voce.pth")
+    result = scan_models([str(root)], index_overrides={model: str(tmp_path / "manca.index")})
+    entry = _by_name(result)["voce"]
+    assert entry["index_source"] == ""
+    assert any("indice manuale" in warning for warning in result["warnings"])

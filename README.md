@@ -23,7 +23,7 @@ senza console e senza installazioni di sistema.
 
 | | |
 |---|---|
-| **Versione** | 3.2.0 |
+| **Versione** | 3.3.0 |
 | **Motore** | rvc-python 0.1.5 + fairseq 0.12.2 + PyTorch 2.0.0 (CUDA 11.8) |
 | **Runtime Windows** | CPython 3.9.13 portatile, scaricato al primo `setup.bat` (~3,5 GB) |
 | **Runtime macOS/Linux** | Python 3.10 + venv gestito da `tools/bootstrap.py` |
@@ -76,7 +76,8 @@ Guida completa: **[docs/ANDROID-BRIDGE.md](docs/ANDROID-BRIDGE.md)**.
 - **Coda di conversione** con un solo worker GPU: progresso, annullamento, retry su crash,
   modello caldo in cache (niente re-import di torch per ogni file).
 - **Modelli e indici**: scansione di `Modelli/` e di **cartelle extra** (es. una cartella Dropbox),
-  abbinamento `.pth` + `.index`, compatibilità automatica `trained_*` → `added_*`.
+  abbinamento `.pth` + `.index`, compatibilità automatica `trained_*` → `added_*` e
+  **indice assegnabile a mano** per modello dalla vista Modelli (elenco di tutti gli indici).
 - **Configurazione completa**: cartelle, modello, pitch, metodo F0 (`rmvpe`, `harvest`, `crepe`, `pm`),
   protezione consonanti, index rate, **formant shift** (−12…+12), parametri esperti, device
   (auto/CPU/CUDA/MPS).
@@ -84,6 +85,8 @@ Guida completa: **[docs/ANDROID-BRIDGE.md](docs/ANDROID-BRIDGE.md)**.
   avanzamento per stadio, annulla/riprendi e test del modello. Guida: [docs/TRAINING.md](docs/TRAINING.md).
 - **Integrazione REAPER**: azione Lua che converte gli item selezionati e li importa in una traccia
   figlia, con auto-test dei parametri su 10 s. Guida: [Reaper/README.md](Reaper/README.md).
+- **Cura del dataset**: `tools/curate_dataset.py` analizza qualità, musica, clipping e duplicati,
+  produce report e cartelle `clean/`/`validation/`. Guida: [docs/DATASET.md](docs/DATASET.md).
 - **Cloud**: sincronizzazione del `config.json` tramite **cartella locale/Dropbox/NAS** (consigliata,
   hot-reload) oppure **Dropbox OAuth2 PKCE** per chi non usa il client desktop.
 - **Diagnostica guidata**: hardware, CUDA, motore, pesi base, percorsi, spazio disco, permessi,
@@ -189,6 +192,7 @@ e `.dev/`: vedi `.gitignore` e `tools/check_repo.py`.
 | [docs/API-CONTRACT.md](docs/API-CONTRACT.md) | endpoint, schema impostazioni, eventi SSE |
 | [docs/STATUS.md](docs/STATUS.md) | stato attuale, cosa è testato, cosa resta da provare |
 | [docs/TRAINING.md](docs/TRAINING.md) | addestramento modelli `.pth` + `.index` da dataset |
+| [docs/DATASET.md](docs/DATASET.md) | pulizia e cura del dataset per un modello professionale |
 | [Reaper/README.md](Reaper/README.md) | integrazione REAPER: azione, auto-test, formati |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | diagnosi e rimedi |
 | [docs/PUBLISHING.md](docs/PUBLISHING.md) | pubblicare su GitHub e creare l'asset runtime |

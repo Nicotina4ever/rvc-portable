@@ -28,7 +28,7 @@ def _entry(path: str, name: str = "voce") -> dict:
 def test_list_models_default_root(client, auth, paths, manager, monkeypatch):
     recorded = {}
 
-    def fake_scan(roots, default_index_hint=""):
+    def fake_scan(roots, default_index_hint="", index_overrides=None):
         recorded["roots"] = list(roots)
         recorded["hint"] = default_index_hint
         model_path = os.path.join(roots[0], "Nicola.pth")
@@ -54,7 +54,7 @@ def test_scan_models_with_explicit_roots(client, auth, tmp_path, monkeypatch):
     root.mkdir()
     recorded = {}
 
-    def fake_scan(roots, default_index_hint=""):
+    def fake_scan(roots, default_index_hint="", index_overrides=None):
         recorded["roots"] = list(roots)
         return {"roots": list(roots), "models": [_entry(os.path.join(roots[0], "x.pth"))], "warnings": []}
 
@@ -68,7 +68,7 @@ def test_scan_models_with_explicit_roots(client, auth, tmp_path, monkeypatch):
 def test_scan_models_without_body_uses_default(client, auth, paths, monkeypatch):
     recorded = {}
 
-    def fake_scan(roots, default_index_hint=""):
+    def fake_scan(roots, default_index_hint="", index_overrides=None):
         recorded["roots"] = list(roots)
         return {"roots": list(roots), "models": [], "warnings": []}
 
@@ -82,7 +82,7 @@ def test_scan_models_missing_root_is_validation_error(client, auth, tmp_path, mo
     monkeypatch.setattr(
         model_scan,
         "scan_models",
-        lambda roots, default_index_hint="": {"roots": list(roots), "models": [], "warnings": []},
+        lambda roots, default_index_hint="", index_overrides=None: {"roots": list(roots), "models": [], "warnings": []},
     )
     missing = str(tmp_path / "non-esiste")
     response = client.post("/api/models/scan", json={"roots": [missing]}, headers=auth)
@@ -107,7 +107,7 @@ def test_scan_models_missing_default_root_returns_warning(client, auth, paths):
 
 
 def test_scan_not_implemented_is_503_model_invalid(client, auth, monkeypatch):
-    def not_ready(roots, default_index_hint=""):
+    def not_ready(roots, default_index_hint="", index_overrides=None):
         raise NotImplementedError("in arrivo")
 
     monkeypatch.setattr(model_scan, "scan_models", not_ready)
@@ -126,7 +126,7 @@ def test_probe_returns_matching_entries(client, auth, tmp_path, monkeypatch):
     model_file.write_bytes(b"dummy-model")
     recorded = {}
 
-    def fake_scan(roots, default_index_hint=""):
+    def fake_scan(roots, default_index_hint="", index_overrides=None):
         recorded["roots"] = list(roots)
         return {
             "roots": list(roots),
@@ -165,7 +165,7 @@ def test_probe_fallback_entry_when_scan_ignores_file(client, auth, tmp_path, mon
     monkeypatch.setattr(
         model_scan,
         "scan_models",
-        lambda roots, default_index_hint="": {"roots": list(roots), "models": [], "warnings": []},
+        lambda roots, default_index_hint="", index_overrides=None: {"roots": list(roots), "models": [], "warnings": []},
     )
     response = client.post("/api/models/probe", json={"paths": [str(model_file)]}, headers=auth)
     assert response.status_code == 200, response.text

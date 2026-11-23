@@ -21,7 +21,8 @@ Requisiti qualitativi:
 | File | Il nome non conta; il dataset può essere una cartella o uno ZIP |
 
 La cartella `Modelli/Dataset_Spot_Locali` è un esempio reale di spot già montati: va bene
-come base, ma prima del training conviene togliere musica e jingle.
+come base, ma prima del training conviene togliere musica e jingle. Metodo e strumento:
+**[DATASET.md](DATASET.md)** (`tools/curate_dataset.py`).
 
 ## 2. Avviare l'addestramento
 

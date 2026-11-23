@@ -26,7 +26,7 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 
 | Metodo | Percorso | Request | Response |
 |---|---|---|---|
-| GET | `/api/health` | — | `{"status":"ok","version":"3.2.0","uptime_s":12.3}` (senza token) |
+| GET | `/api/health` | — | `{"status":"ok","version":"3.3.0","uptime_s":12.3}` (senza token) |
 | GET | `/api/meta` | — | `{"app","version","python","platform","paths","engine": EngineStatus, "started_at"}` |
 | GET | `/api/system/diagnostics?force=false` | — | `DoctorReport` |
 | POST | `/api/system/shutdown` | — | `{"ok":true}` (spegnimento asincrono) |
@@ -37,9 +37,10 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 | POST | `/api/settings/import` | `{"settings": {…}}` oppure corpo = oggetto Settings | come GET |
 | POST | `/api/settings/reveal` | `{"target":"config|logs|data"}` | `{"path": "…"}` (apre nel file manager) |
 | GET | `/api/hardware` | — | `{"probe": RuntimeProbe, "system": {...}, "devices": [DeviceOption]}` |
-| GET | `/api/models` | — | `{"roots": [str], "models": [ModelEntry], "warnings": [str]}` |
+| GET | `/api/models` | — | `{"roots": [str], "models": [ModelEntry], "indexes": [str], "warnings": [str]}` |
 | POST | `/api/models/scan` | `{"roots": [str]?}` | come GET |
 | POST | `/api/models/probe` | `{"paths":[str]}` | `{"models":[ModelEntry]}` |
+| PUT | `/api/models/index` | `{"model":str,"index":str}` (index vuoto = automatico) | `{"roots","models","indexes","warnings"}` |
 | POST | `/api/files/dialog` | `{"kind":"directory|model|index|audio|config","title":str,"initial":str}` | `{"path": str\|null, "canceled": bool}` |
 | GET | `/api/jobs?limit=50&include_terminal=true` | — | `{"jobs":[Job], "stats": {...}, "current":"id\|null"}` |
 | POST | `/api/jobs` | `{"input":str,"model":str?,"index":str?,"source":"manual","dedupe":bool,"params":{"pitch","method","protect","index_rate","filter_radius","rms_mix_rate","resample_sr","model_version","output_format"}}` | `Job` (201) |
@@ -95,6 +96,7 @@ sconosciuta restituisce `index.html` (SPA fallback).
     "extra_model_dirs": [],
     "model_version": "v2", "pitch": 0, "method": "rmvpe", "protect": 0.33,
     "index_rate": 0.3, "formant": 0, "filter_radius": 3, "rms_mix_rate": 0.25,
+    "index_overrides": {},
     "resample_sr": 0, "output_format": "wav"
   },
   "engine": { "device": "auto", "warm_model": true, "idle_unload_minutes": 15, "max_concurrency": 1 },
@@ -153,8 +155,8 @@ Vedi [ANDROID-BRIDGE.md](ANDROID-BRIDGE.md).
 ### ModelEntry
 ```json
 { "name": "Nicola-Spot2", "path": "…/Nicola-Spot2.pth", "index_path": "…/added_….index",
-  "size_mb": 57.6, "version_guess": "v2", "source": "Modelli", "has_index": true,
-  "warnings": ["indice opzionale assente"], "mtime": 1.0 }
+  "index_source": "override|name|hint|""", "size_mb": 57.6, "version_guess": "v2",
+  "source": "Modelli", "has_index": true, "warnings": [], "mtime": 1.0 }
 ```
 
 ### DoctorReport
