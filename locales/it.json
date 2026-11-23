@@ -628,5 +628,20 @@
   "training.title": "Addestramento",
   "training.totalDuration": "Durata totale",
   "training.unavailable": "Addestramento non disponibile",
-  "training.version": "Versione"
+  "training.version": "Versione",
+  "training.logMeta": "{shown} righe visualizzate · totale {total}",
+  "training.logFollow": "Segui fine",
+  "training.logFollowOn": "Segui fine (attivo)",
+  "training.logCopy": "Copia log",
+  "training.logCopied": "Log copiato.",
+  "training.logLines": "Righe di log",
+  "training.testSample": "Campione di test (opzionale)",
+  "training.testSampleHint": "File audio di ~10 s non usato nel training: serve a confrontare i checkpoint.",
+  "training.evaluate": "Confronta i checkpoint",
+  "training.evaluateHint": "Dopo il training prova i modelli salvati e sceglie il migliore.",
+  "training.bestCheckpoint": "Miglior checkpoint",
+  "training.evaluations": "Confronto checkpoint (qualità 0-100)",
+  "training.finetune": "Rifinisci un modello esistente (opzionale)",
+  "training.finetuneHint": "Parte dai pesi di un .pth già addestrato invece che dal modello base. Usa poche epoche e tieni il backup.",
+  "training.busyBadge": "TRAINING ATTIVO"
 }

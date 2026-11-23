@@ -30,8 +30,9 @@ STAGE_RANGES = {
     "f0": (22.0, 38.0),
     "hubert": (38.0, 54.0),
     "filelist": (54.0, 56.0),
-    "train": (56.0, 96.0),
-    "index": (96.0, 99.0),
+    "train": (56.0, 94.0),
+    "evaluate": (94.0, 97.0),
+    "index": (97.0, 99.0),
     "finalize": (99.0, 100.0),
 }
 
@@ -273,6 +274,16 @@ class TrainingService:
         training = self.settings_manager.settings.training
         if not training.enabled:
             raise TrainingError("Addestramento disattivato nelle impostazioni", "training_disabled")
+        with self._lock:
+            busy = any(
+                self._jobs.get(job_id, {}).get("status") in ("queued", "running")
+                for job_id in self._order
+            )
+        if busy:
+            raise TrainingError(
+                "C'e' gia' un training in corso o in coda: attendi o annullalo.",
+                "training_busy",
+            )
 
         source = str((request or {}).get("source") or "").strip()
         if not source:
@@ -302,6 +313,9 @@ class TrainingService:
             "id": job_id,
             "name": name,
             "exp_name": exp_name,
+            "test_sample": str((request or {}).get("test_sample") or "").strip(),
+            "evaluate_checkpoints": bool((request or {}).get("evaluate_checkpoints", True)),
+            "finetune_model": str((request or {}).get("finetune_model") or "").strip(),
             "dir": job_dir,
             "source": os.path.abspath(source),
             "dataset_quick": quick,
@@ -406,6 +420,14 @@ class TrainingService:
                 raise TrainingError(
                     "Si puo' riprendere solo un job fallito o annullato", "training_resume_invalid"
                 )
+            if any(
+                self._jobs.get(other, {}).get("status") in ("queued", "running")
+                for other in self._order
+            ):
+                raise TrainingError(
+                    "C'e' gia' un training attivo: attendi o annullalo.",
+                    "training_busy",
+                )
             job.update(
                 status="queued",
                 stage="queued",
@@ -456,6 +478,13 @@ class TrainingService:
         job_dir = job["dir"]
         log_path = os.path.join(job_dir, "log.txt")
         self._append_log(log_path, "=== Job %s: %s ===" % (job["id"], job["name"]))
+        try:
+            self._append_log(
+                log_path,
+                "Parametri: %s" % json.dumps(job.get("settings") or {}, ensure_ascii=False, sort_keys=True),
+            )
+        except (TypeError, ValueError):
+            pass
         self._update(
             job_id,
             persist=True,
@@ -524,6 +553,11 @@ class TrainingService:
                 "g": asset_info["found"]["g"],
                 "d": asset_info["found"]["d"],
             }
+            finetune_model = str(job.get("finetune_model") or "").strip()
+            if finetune_model:
+                prepared = self._prepare_finetune(job, job_dir, finetune_model, log_path)
+                if prepared:
+                    assets_ctx["g"] = prepared
             self._update(job_id, progress=self._stage_progress("assets", 1.0), message="Pesi pronti")
 
             # 3) config esperimento
@@ -566,6 +600,7 @@ class TrainingService:
                     progress=self._stage_progress(stage_name, 0.0),
                 )
                 command = pipeline.build_command(stage_name, ctx)
+                self._append_log(log_path, "Comando %s: %s" % (stage_name, " ".join(command)))
 
                 def on_line(line: str) -> None:
                     self._handle_line(job_id, stage_name, line, ctx)
@@ -612,11 +647,18 @@ class TrainingService:
             self._update(job_id, progress=self._stage_progress("filelist", 1.0))
 
             run("train")
+            best_model = ""
+            if job.get("evaluate_checkpoints", True):
+                best_model = self._evaluate_checkpoints(job_id, job, job_dir, log_path)
             run("index")
 
             # finalize
             self._update(job_id, stage="finalize", message="Salvataggio modello", progress=self._stage_progress("finalize", 0.2))
-            output = self._finalize(job, job_dir, exp_dir)
+            previous_output = (self.get_job(job_id) or {}).get("output") or {}
+            output = self._finalize(job, job_dir, exp_dir, best_model)
+            if previous_output.get("evaluations"):
+                output["evaluations"] = previous_output["evaluations"]
+                output["best_checkpoint"] = previous_output.get("best_checkpoint", "")
             self._update(
                 job_id,
                 persist=True,
@@ -738,7 +780,7 @@ class TrainingService:
 
     def _handle_line(self, job_id: str, stage: str, line: str, ctx: Dict[str, Any]) -> None:
         settings = ctx["settings"]
-        match = pipeline.PROGRESS_RE.match(line)
+        match = pipeline.PROGRESS_RE.search(line)
         if match and stage in ("preprocess", "f0", "hubert"):
             done, total = int(match.group(1)), int(match.group(2))
             fraction = done / total if total else 0.0
@@ -748,7 +790,7 @@ class TrainingService:
                 message="%s %d/%d" % (pipeline.STAGE_LABELS.get(stage, stage), done, total),
             )
             return
-        match = pipeline.EPOCH_RE.match(line)
+        match = pipeline.EPOCH_RE.search(line)
         if match and stage == "train":
             epoch = int(match.group(1))
             total = int(settings["epochs"]) or 1
@@ -761,7 +803,7 @@ class TrainingService:
                 message="Epoca %d/%d" % (epoch, total),
             )
             return
-        match = pipeline.STEP_RE.match(line)
+        match = pipeline.STEP_RE.search(line)
         if match and stage == "train":
             epoch = int(match.group(1))
             percent = int(match.group(2))
@@ -776,8 +818,180 @@ class TrainingService:
             if loss == loss and loss not in (float("inf"), float("-inf")):
                 self._update(job_id, loss=round(loss, 4))
 
+    # --------------------------------------------------------------- finetune
+    def _prepare_finetune(
+        self, job: Dict[str, Any], job_dir: str, source_model: str, log_path: str
+    ) -> str:
+        """Converte un .pth esportato nel formato atteso da ``-pg`` e ne fa il backup."""
+        if not os.path.isfile(source_model):
+            raise TrainingError("modello da rifinire non trovato: %s" % source_model)
+        python = pipeline.resolve_python(self.paths)
+        base_dir = os.path.join(job_dir, "base")
+        os.makedirs(base_dir, exist_ok=True)
+        target = os.path.join(base_dir, "G_finetune.pth")
+        script = (
+            "import sys, torch\n"
+            "src, dst = sys.argv[1], sys.argv[2]\n"
+            "ckpt = torch.load(src, map_location='cpu')\n"
+            "if isinstance(ckpt, dict):\n"
+            "    weight = ckpt.get('weight') or ckpt.get('model') or ckpt\n"
+            "    config = ckpt.get('config') or []\n"
+            "else:\n"
+            "    weight, config = ckpt, []\n"
+            "torch.save({'model': weight, 'config': config}, dst)\n"
+        )
+        completed = subprocess.run(
+            [python, "-B", "-c", script, source_model, target],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=300,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0,
+        )
+        if completed.returncode != 0 or not os.path.isfile(target):
+            raise TrainingError(
+                "impossibile preparare il modello da rifinire: %s"
+                % ((completed.stderr or "").strip()[-400:] or "errore sconosciuto")
+            )
+        backups = os.path.join(self.paths.models_dir, "backups")
+        os.makedirs(backups, exist_ok=True)
+        stem = os.path.splitext(os.path.basename(source_model))[0]
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        try:
+            shutil.copy2(source_model, os.path.join(backups, "%s_%s.pth" % (stem, stamp)))
+        except OSError:
+            pass
+        self._append_log(log_path, "fine-tune da %s (backup in Modelli/backups)" % stem)
+        return target
+
+    # --------------------------------------------------------------- evaluate
+    def _eval_sample(self, job: Dict[str, Any]) -> str:
+        explicit = str(job.get("test_sample") or "").strip()
+        if explicit and os.path.isfile(explicit):
+            return explicit
+        raw_dir = os.path.join(job["dir"], "dataset", "raw")
+        if os.path.isdir(raw_dir):
+            for name in sorted(os.listdir(raw_dir)):
+                if os.path.splitext(name)[1].lower() in dataset_module.AUDIO_EXTENSIONS:
+                    return os.path.join(raw_dir, name)
+        return ""
+
+    def _checkpoints(self, job: Dict[str, Any]) -> List[str]:
+        weights = os.path.join(job["dir"], "weights")
+        if not os.path.isdir(weights):
+            return []
+        names = [
+            name
+            for name in os.listdir(weights)
+            if name.lower().endswith(".pth")
+        ]
+        paths = [os.path.join(weights, name) for name in names]
+        paths.sort(key=lambda item: os.path.getmtime(item))
+        if len(paths) > 8:
+            step = max(1, len(paths) // 8)
+            paths = paths[::step][:7] + [paths[-1]]
+        return paths
+
+    def _evaluate_checkpoints(
+        self, job_id: str, job: Dict[str, Any], job_dir: str, log_path: str
+    ) -> str:
+        """Prova ogni checkpoint su un campione di 10 s e restituisce il migliore."""
+        sample = self._eval_sample(job)
+        checkpoints = self._checkpoints(job)
+        if not sample or len(checkpoints) < 2:
+            return ""
+        python = pipeline.resolve_python(self.paths)
+        helper = os.path.join(self.paths.app_root, "tools", "reaper_helper.py")
+        if not os.path.isfile(helper):
+            return ""
+        results: List[Dict[str, Any]] = []
+        best_path = ""
+        best_score = -1.0
+        total = len(checkpoints)
+        for position, checkpoint in enumerate(checkpoints, start=1):
+            stem = os.path.splitext(os.path.basename(checkpoint))[0]
+            out_dir = os.path.join(job_dir, "eval", stem)
+            self._update(
+                job_id,
+                stage="evaluate",
+                progress=self._stage_progress("evaluate", (position - 1) / total),
+                message="Test checkpoint %d/%d" % (position, total),
+            )
+            self._append_log(log_path, "checkpoint: %s" % stem)
+            command = [
+                python,
+                "-B",
+                helper,
+                "--input",
+                sample,
+                "--output-dir",
+                out_dir,
+                "--model",
+                checkpoint,
+                "--pitch",
+                "0",
+                "--method",
+                "rmvpe",
+                "--index-rate",
+                "0",
+                "--protect",
+                "0.33",
+            ]
+            try:
+                from ..tuning.auto_tune import compare
+
+                samples: List[Dict[str, Any]] = []
+                # Due passate sullo stesso campione riducono il rumore dell'inferenza.
+                for run_index in range(2):
+                    run_dir = os.path.join(out_dir, "run%d" % (run_index + 1))
+                    run_command = list(command)
+                    run_command[run_command.index("--output-dir") + 1] = run_dir
+                    completed = subprocess.run(
+                        run_command,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
+                        timeout=600,
+                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0,
+                    )
+                    payload = None
+                    for line in (completed.stdout or "").splitlines():
+                        if line.startswith("RESULT "):
+                            payload = json.loads(line[len("RESULT "):])
+                    if not payload or not payload.get("ok"):
+                        raise RuntimeError((payload or {}).get("error") or "conversione fallita")
+                    samples.append(compare(sample, payload["output"], 0))
+                numeric_keys = ("cost", "score", "f0_rmse_cents", "centroid_ratio", "hf_ratio", "voiced_ratio", "clipping")
+                metrics = {}
+                for key in numeric_keys:
+                    values = [float(item.get(key) or 0.0) for item in samples]
+                    metrics[key] = round(sum(values) / len(values), 4)
+                entry = {"checkpoint": stem, "path": checkpoint, **metrics, "runs": len(samples)}
+                results.append(entry)
+                self._append_log(
+                    log_path,
+                    "checkpoint %s: score=%.1f cost=%.2f" % (stem, metrics["score"], metrics["cost"]),
+                )
+                if float(metrics["score"]) > best_score:
+                    best_score = float(metrics["score"])
+                    best_path = checkpoint
+            except Exception as exc:  # un checkpoint rotto non blocca gli altri
+                results.append({"checkpoint": stem, "path": checkpoint, "error": str(exc)})
+                self._append_log(log_path, "checkpoint %s: errore %s" % (stem, exc))
+        results.sort(key=lambda item: float(item.get("score") or -1), reverse=True)
+        self._update(
+            job_id,
+            persist=True,
+            progress=self._stage_progress("evaluate", 1.0),
+            message="Miglior checkpoint: %s" % (os.path.basename(best_path) if best_path else "nessuno"),
+            output={"evaluations": results, "best_checkpoint": best_path},
+        )
+        return best_path
+
     # ---------------------------------------------------------------- finalize
-    def _finalize(self, job: Dict[str, Any], job_dir: str, exp_dir: str) -> Dict[str, Any]:
+    def _finalize(self, job: Dict[str, Any], job_dir: str, exp_dir: str, best_model: str = "") -> Dict[str, Any]:
         weights_dir = os.path.join(job_dir, "weights")
         candidates = [
             os.path.join(weights_dir, name)
@@ -786,7 +1000,7 @@ class TrainingService:
         ] if os.path.isdir(weights_dir) else []
         if not candidates:
             raise TrainingError("training completato ma nessun .pth prodotto", "training_output_missing")
-        model_source = max(candidates, key=os.path.getmtime)
+        model_source = best_model if best_model and os.path.isfile(best_model) else max(candidates, key=os.path.getmtime)
 
         index_candidates: List[str] = []
         for directory in (os.path.join(job_dir, "output"), exp_dir):
@@ -800,6 +1014,16 @@ class TrainingService:
 
         models_dir = self.paths.models_dir
         os.makedirs(models_dir, exist_ok=True)
+        if os.path.isfile(os.path.join(models_dir, job["exp_name"] + ".pth")):
+            backup_dir = os.path.join(models_dir, "backups")
+            os.makedirs(backup_dir, exist_ok=True)
+            stamp = time.strftime("%Y%m%d-%H%M%S")
+            shutil.copy2(
+                os.path.join(models_dir, job["exp_name"] + ".pth"),
+                os.path.join(backup_dir, "%s_%s.pth" % (job["exp_name"], stamp)),
+            )
+            with open(os.path.join(job_dir, "log.txt"), "a", encoding="utf-8", errors="replace") as handle:
+                handle.write("%s backup modello precedente in Modelli/backups\n" % time.strftime("%H:%M:%S"))
         stem = job["exp_name"]
         destination = os.path.join(models_dir, stem + ".pth")
         suffix = 2

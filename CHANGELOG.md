@@ -2,6 +2,32 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.3.1] — 2026-11-23
+
+Log di training leggibile e confronto automatico dei checkpoint.
+
+### Aggiunto
+
+- **Log a fine pagina** nella vista Addestramento: auto-scroll sulle ultime righe (200–2000),
+  pulsante "Segui fine", copia del log e conteggio righe; i parametri risolti e i comandi dei
+  singoli stadi vengono scritti nel log.
+- **Confronto checkpoint**: dopo il training i `.pth` salvati vengono provati su un campione
+  (10 s, due passate per ridurre il rumore), con punteggio qualità; il migliore diventa il
+  modello finale.
+- **Rifinitura di un modello esistente**: campo opzionale "Rifinisci da modello"; converte il
+  `.pth` nel formato di training, usa i pesi base per il discriminatore e fa un **backup**
+  automatico in `Modelli/backups/` prima di sovrascrivere.
+- Campione di test opzionale per il confronto checkpoint.
+- **Un solo training attivo**: secondo job rifiutato (409) e badge "TRAINING ATTIVO" nella UI.
+- Dataset spot pulito generato in `Modelli/Dataset_Spot_Locali_pulito` (497 training + 5 validation).
+
+### Corretto
+
+- Il training ora mostra epoche/e Loss correttamente (i marcatori `RVC_EPOCH`/`RVC_STEP`
+  arrivano con il prefisso del logger).
+- `tools/reaper_helper.py`: indice vuoto non viene più interpretato come la cartella corrente.
+- Cura dataset: i file puliti vengono esportati con estensione `.wav` corretta.
+
 ## [3.3.0] — 2026-11-23
 
 Cura del dataset e indice manuale per modello.

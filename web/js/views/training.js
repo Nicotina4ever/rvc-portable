@@ -3,7 +3,7 @@ import { h, div, span, icon, clear, appendAll, formatDateTime } from "../core/do
 import { t, errorFull } from "../core/i18n.js";
 import { endpoints } from "../core/api.js";
 import { card, btn, badge, emptyState, kvRow, progressBar, setProgress } from "../components/ui.js";
-import { textField, selectField, switchField } from "../components/fields.js";
+import { textField, selectField, switchField, pathField } from "../components/fields.js";
 import { toast } from "../components/toast.js";
 
 const STAGE_LABELS = {
@@ -64,7 +64,10 @@ export const trainingView = {
     let report = null;
     let selectedJobId = null;
     let selectedJob = null;
-    let logOffset = 0;
+    let logTotal = 0;
+    let logLines = [];
+    let logFollow = true;
+    let logLimit = 500;
     let pollTimer = null;
     let busy = false;
 
@@ -163,12 +166,33 @@ export const trainingView = {
     const epochsField = textField({ id: "train-epochs", label: t("training.epochs"), value: "250", type: "number" });
     const batchField = textField({ id: "train-batch", label: t("training.batch"), value: "6", type: "number" });
     const saveEveryField = textField({ id: "train-save", label: t("training.saveEvery"), value: "20", type: "number" });
+    const testSampleField = pathField({
+      id: "train-test-sample",
+      kind: "audio",
+      label: t("training.testSample"),
+      hint: t("training.testSampleHint"),
+    });
+    const evaluateSwitch = switchField({
+      id: "train-evaluate",
+      label: t("training.evaluate"),
+      checked: true,
+      hint: t("training.evaluateHint"),
+    });
+    const finetuneField = pathField({
+      id: "train-finetune",
+      kind: "model",
+      label: t("training.finetune"),
+      hint: t("training.finetuneHint"),
+    });
 
     const advanced = h(
       "details",
       { class: "training-advanced" },
       h("summary", { text: t("training.advanced") }),
-      div("field-grid", epochsField.el, batchField.el, saveEveryField.el)
+      div("field-grid", epochsField.el, batchField.el, saveEveryField.el),
+      finetuneField.el,
+      testSampleField.el,
+      evaluateSwitch.el
     );
     settingsCard.body.append(
       presetSelect.el,
@@ -200,8 +224,15 @@ export const trainingView = {
       return Boolean(capabilities && capabilities.assets && capabilities.assets.ready);
     }
 
+    function hasActiveJob() {
+      return Boolean(
+        capabilities &&
+          ((capabilities.active && capabilities.active !== "") || Number(capabilities.pending || 0) > 0)
+      );
+    }
+
     function canStart() {
-      return Boolean(report && report.ready && assetsReady() && !busy);
+      return Boolean(report && report.ready && assetsReady() && !busy && !hasActiveJob());
     }
 
     function renderActions() {
@@ -346,6 +377,9 @@ export const trainingView = {
           : null,
         job.output && job.output.index
           ? kvRow(t("training.outputIndex"), job.output.index)
+          : null,
+        job.output && job.output.best_checkpoint
+          ? kvRow(t("training.bestCheckpoint"), basename(job.output.best_checkpoint))
           : null
       );
 
@@ -372,9 +406,77 @@ export const trainingView = {
       }
       progressBody.appendChild(actions);
 
+      if (job.output && Array.isArray(job.output.evaluations) && job.output.evaluations.length) {
+        const evalList = h("ol", { class: "training-evals" });
+        job.output.evaluations.forEach((entry) => {
+          const score = Number.isFinite(Number(entry.score)) ? Number(entry.score).toFixed(1) : "—";
+          const cents = Number.isFinite(Number(entry.f0_rmse_cents)) ? Number(entry.f0_rmse_cents).toFixed(0) : "—";
+          evalList.appendChild(
+            h("li", { text: `${entry.checkpoint}: ${score}/100 · F0 ${cents} cents` })
+          );
+        });
+        progressBody.appendChild(
+          div(
+            "training-evals-box",
+            h("p", { class: "training-evals-title", text: t("training.evaluations") }),
+            evalList
+          )
+        );
+      }
+      const logMeta = t("training.logMeta", { shown: logLines.length, total: logTotal });
+      const followButton = btn(logFollow ? t("training.logFollowOn") : t("training.logFollow"), {
+        variant: logFollow ? "primary" : "ghost",
+        onClick: () => {
+          logFollow = !logFollow;
+          renderProgress();
+        },
+      });
+      const copyButton = btn(t("training.logCopy"), {
+        variant: "ghost",
+        onClick: async () => {
+          try {
+            await navigator.clipboard.writeText(logLines.join("\n"));
+            toast.success(t("training.logCopied"));
+          } catch (err) {
+            toast.error(err);
+          }
+        },
+      });
+      const limitSelect = h("select", { class: "input training-log-select", "aria-label": t("training.logLines") });
+      [200, 500, 1000, 2000].forEach((value) => {
+        const option = h("option", { value: String(value), text: String(value) });
+        if (value === logLimit) option.selected = true;
+        limitSelect.appendChild(option);
+      });
+      limitSelect.addEventListener("change", async () => {
+        logLimit = Number(limitSelect.value) || 500;
+        await refreshLog();
+        renderProgress();
+      });
+      progressBody.appendChild(
+        div(
+          "training-log-head",
+          div("training-log-titles", span("training-log-title", t("training.log")), span("training-log-meta", logMeta)),
+          div("training-log-toolbar", followButton, copyButton, limitSelect)
+        )
+      );
       const logBox = h("pre", { class: "training-log", "aria-label": t("training.log") });
-      logBox.textContent = job.__log || "";
+      logBox.textContent = logLines.join("\n");
+      logBox.addEventListener("scroll", () => {
+        const nearBottom = logBox.scrollTop + logBox.clientHeight >= logBox.scrollHeight - 24;
+        if (!nearBottom && logFollow) {
+          logFollow = false;
+          followButton.textContent = t("training.logFollow");
+          followButton.classList.remove("btn-primary");
+          followButton.classList.add("btn-ghost");
+        }
+      });
       progressBody.appendChild(logBox);
+      if (logFollow) {
+        requestAnimationFrame(() => {
+          logBox.scrollTop = logBox.scrollHeight;
+        });
+      }
     }
 
     /* ------------------------------------------------------------- actions */
@@ -445,6 +547,9 @@ export const trainingView = {
           batch_size: Number(batchField.getValue() || 6),
           save_every: Number(saveEveryField.getValue() || 20),
         },
+        finetune_model: finetuneField.getValue().trim(),
+        test_sample: testSampleField.getValue().trim(),
+        evaluate_checkpoints: evaluateSwitch.getValue(),
       };
     }
 
@@ -467,15 +572,26 @@ export const trainingView = {
       }
     }
 
+    async function refreshLog() {
+      if (!selectedJobId) return;
+      try {
+        const offset = Math.max(0, (logTotal || 0) - logLimit);
+        const data = await endpoints.trainingLog(selectedJobId, offset, logLimit);
+        logLines = Array.isArray(data.lines) ? data.lines : [];
+        logTotal = Number.isFinite(Number(data.total)) ? Number(data.total) : logLines.length;
+      } catch (err) {
+        logLines = [];
+        logTotal = 0;
+      }
+    }
+
     async function refreshJob() {
       if (!selectedJobId) return;
       try {
         const data = await endpoints.trainingGet(selectedJobId);
         selectedJob = data.job || null;
         if (selectedJob) {
-          const log = await endpoints.trainingLog(selectedJobId, Math.max(0, logOffset - 200), 200);
-          selectedJob.__log = (log.lines || []).join("\n");
-          logOffset = log.total || logOffset;
+          await refreshLog();
         }
       } catch (err) {
         selectedJob = null;
@@ -485,7 +601,9 @@ export const trainingView = {
 
     function selectJob(jobId) {
       selectedJobId = jobId;
-      logOffset = 0;
+      logTotal = 0;
+      logLines = [];
+      logFollow = true;
       renderJobs();
       refreshJob();
       ensurePolling();

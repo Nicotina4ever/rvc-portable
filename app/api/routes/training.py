@@ -29,6 +29,7 @@ router = APIRouter(tags=["training"])
 _STATUS_BY_CODE = {
     "training_not_found": 404,
     "training_disabled": 409,
+    "training_busy": 409,
     "training_source_missing": 422,
     "training_dataset_invalid": 422,
     "training_assets_missing": 422,

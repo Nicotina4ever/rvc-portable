@@ -628,5 +628,20 @@
   "training.title": "Training",
   "training.totalDuration": "Total duration",
   "training.unavailable": "Training unavailable",
-  "training.version": "Version"
+  "training.version": "Version",
+  "training.logMeta": "{shown} lines shown · {total} total",
+  "training.logFollow": "Follow tail",
+  "training.logFollowOn": "Follow tail (on)",
+  "training.logCopy": "Copy log",
+  "training.logCopied": "Log copied.",
+  "training.logLines": "Log lines",
+  "training.testSample": "Test sample (optional)",
+  "training.testSampleHint": "~10 s audio not used in training: used to compare checkpoints.",
+  "training.evaluate": "Compare checkpoints",
+  "training.evaluateHint": "After training, tests saved models and picks the best one.",
+  "training.bestCheckpoint": "Best checkpoint",
+  "training.evaluations": "Checkpoint comparison (quality 0-100)",
+  "training.finetune": "Fine-tune an existing model (optional)",
+  "training.finetuneHint": "Starts from an existing .pth instead of the base model. Use few epochs and keep the backup.",
+  "training.busyBadge": "TRAINING RUNNING"
 }

@@ -100,7 +100,8 @@ def main(argv: List[str]) -> int:
     manager = SettingsManager(paths)
     manager.load()
     manager.settings.audio.model_path = os.path.abspath(args.model)
-    manager.settings.audio.index_path = os.path.abspath(args.index or "")
+    resolved_index = os.path.abspath(args.index) if args.index else ""
+    manager.settings.audio.index_path = resolved_index
     engine = create_engine(paths, settings_manager=manager)
 
     base_params: Dict[str, Any] = {
@@ -119,7 +120,7 @@ def main(argv: List[str]) -> int:
         progress(2.0, "loading")
         engine.load(
             os.path.abspath(args.model),
-            os.path.abspath(args.index or ""),
+            resolved_index,
             version=args.version,
             device=args.device,
         )
@@ -179,7 +180,7 @@ def main(argv: List[str]) -> int:
             "output": target,
             "input": source,
             "model": os.path.abspath(args.model),
-            "index": os.path.abspath(args.index or ""),
+            "index": resolved_index,
             "params": params.to_dict(),
             "auto": {"best": auto_report.get("best", {})} if auto_report else {},
         }

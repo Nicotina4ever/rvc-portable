@@ -23,9 +23,9 @@ VENDOR_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor",
 BOOT_SCRIPT = os.path.join(VENDOR_ROOT, "_boot.py")
 MUTE_DIR = os.path.join(VENDOR_ROOT, "assets", "mute")
 
-PROGRESS_RE = re.compile(r"^PROGRESS\s+(\d+)\s+(\d+)")
-EPOCH_RE = re.compile(r"^RVC_EPOCH\s+(\d+)")
-STEP_RE = re.compile(r"^RVC_STEP\s+(\d+)\s+(\d+)")
+PROGRESS_RE = re.compile(r"PROGRESS\s+(\d+)\s+(\d+)")
+EPOCH_RE = re.compile(r"RVC_EPOCH\s+(\d+)")
+STEP_RE = re.compile(r"RVC_STEP\s+(\d+)\s+(\d+)")
 LOSS_RE = re.compile(r"loss_gen=([0-9]*\.?[0-9]+)")
 
 STAGE_LABELS = {

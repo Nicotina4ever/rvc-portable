@@ -103,3 +103,6 @@ rischio.
 `Modelli/Dataset_Spot_Locali`: **502 file, 165,7 minuti, 48 kHz**. È materiale reale di spot, quindi
  contiene spesso musica: il report di cura indica quali file usare per un modello pulito.
 Il report generato è in `data/reports/Dataset_Spot_Locali_20261123/` (locale, non versionato).
+La versione pulita è in `Modelli/Dataset_Spot_Locali_pulito/`: **497 file** in `clean/` e
+**5 file** in `validation/` (165,7 minuti, WAV 48 kHz mono, silenzi tagliati).
+Il campione di validazione serve per confrontare i checkpoint e per l'auto-test finale.

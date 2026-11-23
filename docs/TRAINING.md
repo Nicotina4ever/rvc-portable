@@ -102,3 +102,21 @@ Se mancano e il download è abilitato, vengono scaricati da HuggingFace
 - F0: `rmvpe.pt` del runtime.
 - Il training gira in processi separati: un crash non blocca l'app.
 - Mentre il training è attivo, la coda di conversione viene messa in pausa per evitare OOM.
+
+
+## 7. Checkpoint, confronto e rifinitura
+
+- **Backup**: prima di sovrascrivere un modello in `Modelli/`, il vecchio `.pth` viene copiato in
+  `Modelli/backups/<nome>_<data>.pth`. Anche il fine-tune salva sempre una copia del modello di
+  partenza.
+- **Confronto checkpoint**: a fine training i `.pth` salvati (uno ogni `Salva ogni N epoche`)
+  vengono provati su un campione di 10 s con due passate; la UI mostra il punteggio e il
+  **migliore diventa il modello finale**.
+- **Campione di test**: scegli un file di `validation/` (o un audio di ~10 s mai usato nel training)
+  nel campo "Campione di test": serve a confrontare i checkpoint in modo onesto.
+- **Rifinitura**: il campo "Rifinisci un modello esistente" parte da un `.pth` già addestrato.
+  Usa **10–50 epoche**, lo stesso sample rate/versione del modello e un dataset pulito; troppe
+  epoche rischiano di dimenticare la voce originale (catastrophic forgetting).
+- **Un solo training alla volta**: il backend rifiuta un secondo job finché il primo è in corso o
+  in coda. Annulla o attendi prima di avviarne un altro.
+
