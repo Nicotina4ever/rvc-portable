@@ -23,7 +23,7 @@ senza console e senza installazioni di sistema.
 
 | | |
 |---|---|
-| **Versione** | 3.3.4 |
+| **Versione** | 3.3.5 |
 | **Motore** | rvc-python 0.1.5 + fairseq 0.12.2 + PyTorch 2.0.0 (CUDA 11.8) |
 | **Runtime Windows** | CPython 3.9.13 portatile, scaricato al primo `setup.bat` (~3,5 GB) |
 | **Runtime macOS/Linux** | Python 3.10 + venv gestito da `tools/bootstrap.py` |
@@ -193,6 +193,7 @@ e `.dev/`: vedi `.gitignore` e `tools/check_repo.py`.
 | [docs/STATUS.md](docs/STATUS.md) | stato attuale, cosa è testato, cosa resta da provare |
 | [docs/TRAINING.md](docs/TRAINING.md) | addestramento modelli `.pth` + `.index` da dataset |
 | [docs/DATASET.md](docs/DATASET.md) | pulizia e cura del dataset per un modello professionale |
+| [docs/TRAY.md](docs/TRAY.md) | icona system tray, menu e chiusura in background |
 | [Reaper/README.md](Reaper/README.md) | integrazione REAPER: azione, auto-test, formati |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | diagnosi e rimedi |
 | [docs/PUBLISHING.md](docs/PUBLISHING.md) | pubblicare su GitHub e creare l'asset runtime |

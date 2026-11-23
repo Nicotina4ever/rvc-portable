@@ -26,10 +26,11 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 
 | Metodo | Percorso | Request | Response |
 |---|---|---|---|
-| GET | `/api/health` | — | `{"status":"ok","version":"3.3.4","uptime_s":12.3}` (senza token) |
+| GET | `/api/health` | — | `{"status":"ok","version":"3.3.5","uptime_s":12.3}` (senza token) |
 | GET | `/api/meta` | — | `{"app","version","python","platform","paths","engine": EngineStatus, "started_at"}` |
 | GET | `/api/system/diagnostics?force=false` | — | `DoctorReport` |
 | POST | `/api/system/shutdown` | — | `{"ok":true}` (spegnimento asincrono) |
+| POST | `/api/system/engine/unload` | — | `{"ok":true,"engine":EngineStatus}` |
 | GET | `/api/settings` | — | `{"settings": Settings, "warnings": [str], "problems": [PathProblem], "config_path": str}` |
 | PUT | `/api/settings` | `{"settings": Settings}` | come GET |
 | PATCH | `/api/settings` | `{"patch": {…}}` (merge profondo) | come GET |

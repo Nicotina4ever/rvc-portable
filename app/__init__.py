@@ -3,6 +3,6 @@
 Backend locale (FastAPI) + motore RVC + SPA statica.
 """
 
-__version__ = "3.3.4"
+__version__ = "3.3.5"
 __app_name__ = "RVC Portable"
 __suite_name__ = "NL Tools Suite"

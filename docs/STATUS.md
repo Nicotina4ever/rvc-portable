@@ -7,7 +7,7 @@ cosa resta da verificare**. Aggiornalo a ogni rilascio.
 
 | Componente | Versione | Release |
 |---|---|---|
-| RVC Portable (PC) | **3.3.4** | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.4> |
+| RVC Portable (PC) | **3.3.5** | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.5> |
 | Runtime Windows | 3.0.0 (invariato) | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/runtime-v3.0.0> |
 | RVC-Droid (Android) | **4.0** | <https://github.com/Nicotina4ever/rvc-droid/releases/tag/v4.0> |
 | Motore | rvc-python 0.1.5 + fairseq 0.12.2 + torch 2.0.0+cu118 | — |
@@ -35,6 +35,8 @@ cosa resta da verificare**. Aggiornalo a ogni rilascio.
   Modelli, con consigli pratici (F0, epoche, indice manuale, formant, dataset).
 - **Menu adattivo**: sotto i 1440 px la navigazione si compatta dietro un pulsante hamburger
   (mostra/nascondi), evitando sovrapposizioni con stato/lingua/tema.
+- **System tray Windows**: icona con menu Mostra, Avvia/Ferma monitoraggio, Ferma monitoraggio
+  e motore, Scarica motore, Apri cartelle, Esci. Chiudendo la finestra l'app resta attiva.
 - **Stile più sobrio**: meno gradienti e aloni neon su pulsanti, progress e stati attivi.
 - **Fine-tune ben visibile** nel form Addestramento e **pulizia cache** per singolo job o per
   tutti i job chiusi, con conferma: libera dataset copiato, feature, checkpoint intermedi e
@@ -105,5 +107,5 @@ Spazio tipico del progetto dopo la pulizia: ~8,5 GB totali, di cui `runtime/` 5,
   auto-scroll, confronto checkpoint e fine-tune con backup.
 - **Un solo training alla volta**: il backend risponde `409 training_busy`; i job annullati
   possono essere eliminati dalla lista.
-- **Release**: [PC 3.3.4](https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.4) ·
+- **Release**: [PC 3.3.5](https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.5) ·
   [Android 4.0](https://github.com/Nicotina4ever/rvc-droid/releases/tag/v4.0).

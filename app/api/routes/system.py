@@ -95,3 +95,17 @@ def post_shutdown(request: Request):
         daemon=True,
     ).start()
     return {"ok": True}
+
+@router.post("/api/system/engine/unload")
+def post_engine_unload(request: Request):
+    """Scarica il modello dal motore, liberando la VRAM (tray/UI)."""
+    engine = deps.engine(request)
+    try:
+        engine.unload()
+    except Exception as exc:
+        raise ApiError(
+            "engine_error",
+            "Impossibile scaricare il motore: %s" % exc,
+            409,
+        ) from exc
+    return {"ok": True, "engine": _engine_status(request)}

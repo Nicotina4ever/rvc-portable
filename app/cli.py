@@ -47,6 +47,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="apre una normale scheda del browser",
     )
     parser.add_argument("--headless", action="store_true", help="solo server, nessun browser")
+    parser.add_argument(
+        "--no-tray",
+        action="store_true",
+        help="non creare l'icona nella system tray (Windows)",
+    )
     parser.add_argument("--console", action="store_true", help="log anche su console")
     parser.add_argument(
         "--log-level",

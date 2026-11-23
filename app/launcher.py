@@ -125,6 +125,7 @@ def run(paths: AppPaths, args) -> int:
     app.state.shutdown_callback = shutdown_event.set
 
     server = _start_server(app, args.host, port, logger)
+    tray = None
     try:
         if not _wait_health(port, timeout=45.0):
             raise RuntimeError("il backend non risponde su 127.0.0.1:%d" % port)
@@ -136,14 +137,20 @@ def run(paths: AppPaths, args) -> int:
             "backend pronto su http://127.0.0.1:%d (token in data/state/session.json)",
             port,
         )
+        tray = _build_tray(paths, manager, url, port, token, args, logger)
 
         if args.headless or args.browser == "none":
             print(url, flush=True)
             _wait_for_shutdown(shutdown_event, args, queue, paths)
         else:
-            _run_with_browser(url, args, paths, shutdown_event, queue)
+            _run_with_browser(url, args, paths, shutdown_event, queue, keep_alive=tray is not None)
     finally:
         logger.info("spegnimento in corso")
+        if tray is not None:
+            try:
+                tray.stop()
+            except Exception:
+                pass
         try:
             status_publisher.stop()
         except Exception:
@@ -325,7 +332,7 @@ def _start_server(app, host: str, port: int, logger):
     return server
 
 
-def _wait_for_shutdown(shutdown_event, args, queue, paths: AppPaths) -> None:
+def _wait_for_shutdown(shutdown_event, args, queue, paths: AppPaths, keep_alive: bool = False) -> None:
     idle_minutes = int(getattr(args, "idle_exit_minutes", 0) or 0)
     no_client_since: Optional[float] = None
     while not shutdown_event.is_set():
@@ -335,7 +342,7 @@ def _wait_for_shutdown(shutdown_event, args, queue, paths: AppPaths) -> None:
             return
         if shutdown_event.is_set():
             return
-        if idle_minutes <= 0:
+        if idle_minutes <= 0 or keep_alive:
             continue
         clients = events.BUS.subscriber_count
         if clients > 0:
@@ -347,7 +354,37 @@ def _wait_for_shutdown(shutdown_event, args, queue, paths: AppPaths) -> None:
             return
 
 
-def _run_with_browser(url, args, paths: AppPaths, shutdown_event, queue) -> None:
+def _build_tray(paths: AppPaths, manager, url: str, port: int, token: str, args, logger):
+    if os.name != "nt":
+        return None
+    if getattr(args, "no_tray", False) or getattr(args, "headless", False):
+        return None
+    if getattr(args, "browser", "auto") == "none":
+        return None
+    try:
+        from .tray import TrayIcon
+
+        tray = TrayIcon(
+            url=url,
+            port=port,
+            token=token,
+            app_root=paths.app_root,
+            models_dir=paths.models_dir,
+            logs_dir=paths.logs_dir,
+            language=manager.settings.ui.language,
+            show_callback=lambda: _open_browser(url, args, paths),
+        )
+        if not tray.start():
+            logger.warning("system tray non avviata")
+            return None
+        logger.info("system tray avviata")
+        return tray
+    except Exception:
+        logger.exception("system tray non disponibile")
+        return None
+
+
+def _run_with_browser(url, args, paths: AppPaths, shutdown_event, queue, keep_alive: bool = False) -> None:
     process, mode = _open_browser(url, args, paths)
     LOGGER.info("interfaccia aperta (%s)", mode)
     if process is not None:
@@ -358,9 +395,11 @@ def _run_with_browser(url, args, paths: AppPaths, shutdown_event, queue) -> None
         # Se il processo termina subito ma la pagina e' ancora connessa,
         # lasciamo vivere il server (chiusura delegata all'idle-exit).
         time.sleep(0.5)
-        if events.BUS.subscriber_count == 0:
+        if not keep_alive and events.BUS.subscriber_count == 0:
             return
-    _wait_for_shutdown(shutdown_event, args, queue, paths)
+        if keep_alive:
+            LOGGER.info("finestra chiusa: l'app resta attiva nella system tray")
+    _wait_for_shutdown(shutdown_event, args, queue, paths, keep_alive=keep_alive)
 
 
 # ---------------------------------------------------------------------------

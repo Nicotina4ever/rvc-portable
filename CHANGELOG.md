@@ -2,6 +2,25 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.3.5] — 2026-11-23
+
+System tray Windows.
+
+### Aggiunto
+
+- **Icona nella system tray** con menu: Mostra, Avvia monitoraggio, Ferma monitoraggio,
+  Ferma monitoraggio e motore, Scarica motore, Apri cartelle Modelli/log, Esci.
+- Chiudendo la finestra l'app **resta attiva** nella tray; l'uscita automatica per inattività
+  è disabilitata finché la tray è attiva.
+- API `POST /api/system/engine/unload` per scaricare il modello dalla VRAM.
+- Opzione `--no-tray`; nessuna tray con `--headless`.
+- Icona `web/assets/icon.ico` e guida [docs/TRAY.md](docs/TRAY.md).
+
+### Note
+
+- La tray usa le API locali con token, senza porte aggiuntive.
+- Su macOS/Linux resta il comportamento classico.
+
 ## [3.3.4] — 2026-11-23
 
 Correzione Addestramento, menu adattivo e stile più sobrio.
