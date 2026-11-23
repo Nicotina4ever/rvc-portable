@@ -53,6 +53,27 @@ export function card(options = {}) {
   return node;
 }
 
+/** Piccolo pulsante "?" con suggerimento, accessibile anche da touch. */
+export function helpTip(text, label = "?") {
+  const wrapper = span("help-tip");
+  const button = h("button", {
+    type: "button",
+    class: "help-tip-button",
+    "aria-label": text,
+    title: text,
+    text: label,
+  });
+  const bubble = h("span", { class: "help-tip-bubble", role: "tooltip", text });
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    wrapper.classList.toggle("is-open");
+  });
+  wrapper.addEventListener("mouseleave", () => wrapper.classList.remove("is-open"));
+  wrapper.append(button, bubble);
+  return wrapper;
+}
+
 export function badge(text, variant = "neutral") {
   return span("badge badge-" + variant, text);
 }

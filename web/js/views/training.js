@@ -103,6 +103,7 @@ export const trainingView = {
       mono: true,
       placeholder: t("training.sourcePlaceholder"),
       hint: t("training.sourceHint"),
+      info: t("training.info.source"),
     });
     const analyzeButton = btn(t("training.analyze"), { variant: "secondary", iconName: "search" });
     const folderButton = btn(t("training.browseFolder"), { variant: "ghost", iconName: "folder" });
@@ -112,17 +113,20 @@ export const trainingView = {
       label: t("training.nameLabel"),
       placeholder: t("training.namePlaceholder"),
       hint: t("training.nameHint"),
+      info: t("training.info.name"),
     });
     formCard.body.append(
       sourceField.el,
       div("button-row button-row-wrap", folderButton, zipButton, analyzeButton),
-      nameField.el
+      nameField.el,
+      h("p", { class: "field-hint", text: t("training.tips") })
     );
 
     const presetSelect = selectField({
       id: "train-preset",
       label: t("training.preset"),
       value: "bilanciato",
+      info: t("training.info.preset"),
       options: [
         { value: "veloce", label: t("training.presetFast") },
         { value: "bilanciato", label: t("training.presetBalanced") },
@@ -133,6 +137,7 @@ export const trainingView = {
       id: "train-sr",
       label: t("training.sampleRate"),
       value: "48000",
+      info: t("training.info.sampleRate"),
       options: [
         { value: "48000", label: "48 kHz" },
         { value: "40000", label: "40 kHz" },
@@ -143,6 +148,7 @@ export const trainingView = {
       id: "train-version",
       label: t("training.version"),
       value: "v2",
+      info: t("training.info.version"),
       options: [
         { value: "v2", label: "v2" },
         { value: "v1", label: "v1" },
@@ -153,36 +159,41 @@ export const trainingView = {
       label: t("training.f0"),
       checked: true,
       hint: t("training.f0Hint"),
+      info: t("training.info.f0"),
     });
     const f0MethodSelect = selectField({
       id: "train-f0-method",
       label: t("training.f0Method"),
       value: "rmvpe",
+      info: t("training.info.f0Method"),
       options: [
         { value: "rmvpe", label: "RMVPE" },
         { value: "pm", label: "Parselmouth (pm)" },
       ],
     });
-    const epochsField = textField({ id: "train-epochs", label: t("training.epochs"), value: "250", type: "number" });
-    const batchField = textField({ id: "train-batch", label: t("training.batch"), value: "6", type: "number" });
-    const saveEveryField = textField({ id: "train-save", label: t("training.saveEvery"), value: "20", type: "number" });
+    const epochsField = textField({ id: "train-epochs", label: t("training.epochs"), value: "250", type: "number", info: t("training.info.epochs") });
+    const batchField = textField({ id: "train-batch", label: t("training.batch"), value: "6", type: "number", info: t("training.info.batch") });
+    const saveEveryField = textField({ id: "train-save", label: t("training.saveEvery"), value: "20", type: "number", info: t("training.info.saveEvery") });
     const testSampleField = pathField({
       id: "train-test-sample",
       kind: "audio",
       label: t("training.testSample"),
       hint: t("training.testSampleHint"),
+      info: t("training.info.testSample"),
     });
     const evaluateSwitch = switchField({
       id: "train-evaluate",
       label: t("training.evaluate"),
       checked: true,
       hint: t("training.evaluateHint"),
+      info: t("training.info.evaluate"),
     });
     const finetuneField = pathField({
       id: "train-finetune",
       kind: "model",
       label: t("training.finetune"),
       hint: t("training.finetuneHint"),
+      info: t("training.info.finetune"),
     });
 
     const advanced = h(

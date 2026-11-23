@@ -5,7 +5,7 @@ import { state, subscribe } from "../core/store.js";
 import { loadModels } from "../core/data.js";
 import { endpoints } from "../core/api.js";
 import { patchSettings } from "../core/settings.js";
-import { card, btn, badge, emptyState, loadingBlock } from "../components/ui.js";
+import { card, btn, badge, emptyState, loadingBlock, helpTip } from "../components/ui.js";
 import { searchField } from "../components/fields.js";
 import { toast } from "../components/toast.js";
 
@@ -135,6 +135,7 @@ export const modelsView = {
           div(
             "model-index-row",
             span("model-index-label", t("models.indexLabel")),
+            helpTip(t("models.info.index"), t("common.help")),
             selector
           )
         );

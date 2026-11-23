@@ -268,6 +268,7 @@ export const configView = {
         step: 1,
         value: draft.pitch,
         hint: t("config.pitchHint"),
+        info: t("config.info.pitch"),
         format: (value) => (value > 0 ? "+" + value : String(value)),
         onChange: () => setDirty(true),
       });
@@ -279,6 +280,7 @@ export const configView = {
         step: 0.01,
         value: draft.protect,
         hint: t("config.protectHint"),
+        info: t("config.info.protect"),
         onChange: () => setDirty(true),
       });
       fields.indexRate = rangeField({
@@ -289,6 +291,7 @@ export const configView = {
         step: 0.01,
         value: draft.index_rate,
         hint: t("config.indexRateHint"),
+        info: t("config.info.indexRate"),
         onChange: () => setDirty(true),
       });
       fields.method = selectField({
@@ -297,6 +300,7 @@ export const configView = {
         value: draft.method,
         options: METHODS,
         hint: t("config.methodHint"),
+        info: t("config.info.method"),
         onChange: () => setDirty(true),
       });
       const voiceCard = card({

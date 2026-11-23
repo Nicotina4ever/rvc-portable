@@ -2,6 +2,21 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.3.2] — 2026-11-23
+
+Suggerimenti guidati nella GUI.
+
+### Aggiunto
+
+- Pulsanti **"?"** accanto ai campi di Addestramento, Configurazione e Modelli, con tooltip
+  accessibili (anche da touch) che spiegano quali valori scegliere: F0, epoche, batch, campione
+  di test, fine-tune, indice manuale, pitch/protezione/index rate.
+- Riga di **consigli rapidi** nella sezione Addestramento.
+
+### Note
+
+- Nessuna modifica al motore, al formato dei modelli o alle API.
+
 ## [3.3.1] — 2026-11-23
 
 Log di training leggibile e confronto automatico dei checkpoint.

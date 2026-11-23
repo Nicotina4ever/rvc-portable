@@ -2,21 +2,24 @@
 import { h, div, span, icon, uid, clamp, setAttr } from "../core/dom.js";
 import { t, errorFull } from "../core/i18n.js";
 import { endpoints } from "../core/api.js";
-import { btn } from "./ui.js";
+import { btn, helpTip } from "./ui.js";
 import { toast } from "./toast.js";
 
 function fieldShell(options) {
-  const { label = "", hint = "", control, id = "", describedTarget = null, error = "", className = "" } = options;
+  const { label = "", hint = "", info = "", control, id = "", describedTarget = null, error = "", className = "" } = options;
   const hintId = hint ? uid("hint") : "";
   const errorId = uid("error");
   const labelNode = label ? h("label", { class: "field-label", for: id }, label) : null;
+  const labelRow = label || info
+    ? div("field-label-row", labelNode, info ? helpTip(info, t("common.help")) : null)
+    : null;
   const hintNode = hint ? h("p", { class: "field-hint", id: hintId, text: hint }) : null;
   const errorNode = h("p", { class: "field-error", id: errorId, hidden: true });
   if (describedTarget) {
     const described = [hintId, errorId].filter(Boolean).join(" ");
     if (described) setAttr(describedTarget, "aria-describedby", described);
   }
-  const shell = div("field" + (className ? " " + className : ""), labelNode, div("field-control", control), hintNode, errorNode);
+  const shell = div("field" + (className ? " " + className : ""), labelRow, div("field-control", control), hintNode, errorNode);
   shell.setError = (message) => {
     const hasError = Boolean(message);
     shell.classList.toggle("has-error", hasError);
@@ -34,6 +37,7 @@ export function textField(options = {}) {
     value = "",
     placeholder = "",
     hint = "",
+    info = "",
     type = "text",
     mono = false,
     required = false,
@@ -51,7 +55,7 @@ export function textField(options = {}) {
     required: required || null,
   });
   if (onInput) input.addEventListener("input", () => onInput(input.value));
-  const shell = fieldShell({ label, hint, control: input, id, describedTarget: input, className });
+  const shell = fieldShell({ label, hint, info, control: input, id, describedTarget: input, className });
   return {
     el: shell,
     input,
@@ -71,6 +75,7 @@ export function pathField(options = {}) {
     value = "",
     placeholder = "",
     hint = "",
+    info = "",
     kind = "directory",
     dialogTitle = "",
     required = false,
@@ -118,7 +123,7 @@ export function pathField(options = {}) {
     if (onChange) onChange(input.value);
   });
   const row = div("path-row", input, browseButton);
-  const shell = fieldShell({ label, hint, control: row, id, describedTarget: input });
+  const shell = fieldShell({ label, hint, info, control: row, id, describedTarget: input });
   return {
     el: shell,
     input,
@@ -155,6 +160,7 @@ export function rangeField(options = {}) {
     step = 0.01,
     value = min,
     hint = "",
+    info = "",
     format = null,
     onChange = null,
   } = options;
@@ -182,7 +188,12 @@ export function rangeField(options = {}) {
   });
   number.addEventListener("change", () => apply(number.value, number));
 
-  const labelRow = div("field-label-row", h("label", { class: "field-label", for: id, text: label }), output);
+  const labelRow = div(
+    "field-label-row",
+    h("label", { class: "field-label", for: id, text: label }),
+    output,
+    info ? helpTip(info, t("common.help")) : null
+  );
   const row = div("slider-row", range, number);
   const hintNode = hint ? h("p", { class: "field-hint", text: hint }) : null;
   const shell = div("field field-range", labelRow, row, hintNode);
@@ -205,6 +216,7 @@ export function selectField(options = {}) {
     value = "",
     options: items = [],
     hint = "",
+    info = "",
     onChange = null,
     includeEmpty = false,
     emptyLabel = "",
@@ -217,7 +229,7 @@ export function selectField(options = {}) {
     select.appendChild(option);
   }
   if (onChange) select.addEventListener("change", () => onChange(select.value));
-  const shell = fieldShell({ label, hint, control: select, id, describedTarget: select });
+  const shell = fieldShell({ label, hint, info, control: select, id, describedTarget: select });
   return {
     el: shell,
     select,
@@ -237,6 +249,7 @@ export function switchField(options = {}) {
     label = "",
     checked = false,
     hint = "",
+    info = "",
     onChange = null,
     disabled = false,
   } = options;
@@ -250,7 +263,11 @@ export function switchField(options = {}) {
     span("switch-track", icon("check", "switch-check")),
     span("switch-label", label)
   );
-  const shell = div("field field-switch", control, hint ? h("p", { class: "field-hint", text: hint }) : null);
+  const shell = div(
+    "field field-switch",
+    info ? div("field-label-row", control, helpTip(info, t("common.help"))) : control,
+    hint ? h("p", { class: "field-hint", text: hint }) : null
+  );
   return {
     el: shell,
     input,
