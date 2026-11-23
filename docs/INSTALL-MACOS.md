@@ -19,7 +19,7 @@ Scegli una cartella scrivibile, ad esempio `~/Applications/RVC-Portable`:
 ```bash
 git clone https://github.com/Nicotina4ever/rvc-portable.git ~/Applications/RVC-Portable
 cd ~/Applications/RVC-Portable
-chmod +x setup.sh run.sh run.command
+chmod +x setup.sh run.sh run.command setup.command
 ./setup.sh
 ```
 
@@ -29,7 +29,8 @@ chmod +x setup.sh run.sh run.command
 2. installa `pip<24.1` (richiesto da `omegaconf==2.0.6`);
 3. installa `requirements/base.txt` e `requirements/engine-posix.txt`
    (`torch==2.2.2`, `numpy==1.23.5`, `faiss-cpu==1.7.3`, `rvc-python==0.1.5`, `fairseq==0.12.2`…);
-4. verifica import e motore.
+4. scarica i pesi base `hubert_base.pt` e `rmvpe.pt` (~350 MB, una volta sola);
+5. verifica import e motore.
 
 Opzioni:
 
@@ -63,6 +64,15 @@ Per l'uso locale:
 
 MPS è **sperimentale** con RVC: se la conversione fallisce o è instabile, imposta device `cpu`
 nelle Avanzate (più lento ma affidabile).
+
+## Addestramento e REAPER
+
+- **Addestramento**: il tab esiste e funziona, ma su Mac gira su **CPU**: per dataset reali è
+  molto lento, quindi è consigliato creare il modello su un PC NVIDIA e copiare il `.pth` in `Modelli/`.
+  Dettagli: [TRAINING.md](TRAINING.md).
+- **REAPER**: carica `Reaper/RVC_Portable.lua`; nel dialog indica
+  `~/Applications/RVC-Portable/runtime/bin/python3` e `.../tools/reaper_helper.py`.
+  Dettagli: [../Reaper/README.md](../Reaper/README.md).
 
 ## Verifica
 

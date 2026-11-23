@@ -23,13 +23,14 @@ senza console e senza installazioni di sistema.
 
 | | |
 |---|---|
-| **Versione** | 3.0.0 |
+| **Versione** | 3.2.0 |
 | **Motore** | rvc-python 0.1.5 + fairseq 0.12.2 + PyTorch 2.0.0 (CUDA 11.8) |
 | **Runtime Windows** | CPython 3.9.13 portatile, scaricato al primo `setup.bat` (~3,5 GB) |
 | **Runtime macOS/Linux** | Python 3.10 + venv gestito da `tools/bootstrap.py` |
 | **Repository** | solo sorgenti (~3 MB): runtime e modelli non sono versionati |
 | **UI** | SPA statica (HTML/CSS/JS, zero build) + FastAPI locale |
 | **Lingue** | Italiano / English (cambio istantaneo) |
+| **Android** | RVC-Droid 4.0 (Kotlin/Compose, rotazione libera, layout a due colonne) |
 
 <p align="center">
   <a href="docs/img/models.png"><img src="docs/img/models.png" alt="Modelli" width="270"></a>
@@ -70,13 +71,19 @@ Guida completa: **[docs/ANDROID-BRIDGE.md](docs/ANDROID-BRIDGE.md)**.
   RVC da remoto** (pitch, metodo, index rate, protezione, modello) senza aprire porte o VPN.
 - **Monitoraggio di una cartella a scelta** (Dropbox, NAS, OneDrive, locale): ogni nuovo file audio
   (`.wav .mp3 .ogg .m4a .flac .aac .opus .wma`) viene accodato e convertito automaticamente, con
-  deduplica, attesa di scrittura completa e avvio automatico all'apertura se configurato.
+  deduplica e attesa di scrittura completa. Il monitor **non parte da solo**: si avvia dal tab
+  Monitor o dal preset Android (con conferma), e si spegne da solo dopo N minuti di inattività.
 - **Coda di conversione** con un solo worker GPU: progresso, annullamento, retry su crash,
   modello caldo in cache (niente re-import di torch per ogni file).
 - **Modelli e indici**: scansione di `Modelli/` e di **cartelle extra** (es. una cartella Dropbox),
   abbinamento `.pth` + `.index`, compatibilità automatica `trained_*` → `added_*`.
 - **Configurazione completa**: cartelle, modello, pitch, metodo F0 (`rmvpe`, `harvest`, `crepe`, `pm`),
-  protezione consonanti, index rate, parametri esperti, device (auto/CPU/CUDA/MPS).
+  protezione consonanti, index rate, **formant shift** (−12…+12), parametri esperti, device
+  (auto/CPU/CUDA/MPS).
+- **Addestramento**: crea un modello `.pth` + `.index` da una cartella/ZIP di audio, con preset,
+  avanzamento per stadio, annulla/riprendi e test del modello. Guida: [docs/TRAINING.md](docs/TRAINING.md).
+- **Integrazione REAPER**: azione Lua che converte gli item selezionati e li importa in una traccia
+  figlia, con auto-test dei parametri su 10 s. Guida: [Reaper/README.md](Reaper/README.md).
 - **Cloud**: sincronizzazione del `config.json` tramite **cartella locale/Dropbox/NAS** (consigliata,
   hot-reload) oppure **Dropbox OAuth2 PKCE** per chi non usa il client desktop.
 - **Diagnostica guidata**: hardware, CUDA, motore, pesi base, percorsi, spazio disco, permessi,
@@ -113,8 +120,8 @@ Dettagli e troubleshooting: [docs/INSTALL-WINDOWS.md](docs/INSTALL-WINDOWS.md).
 ```bash
 git clone https://github.com/Nicotina4ever/rvc-portable.git ~/Applications/RVC-Portable
 cd ~/Applications/RVC-Portable
-chmod +x setup.sh run.sh run.command
-./setup.sh          # crea runtime/ (venv Python 3.10) e installa il motore
+chmod +x setup.sh run.sh run.command setup.command
+./setup.sh          # crea runtime/ (venv Python 3.10), installa motore e pesi base
 ./run.command       # oppure doppio click nel Finder
 ```
 
@@ -128,7 +135,7 @@ Guida: [docs/INSTALL-MACOS.md](docs/INSTALL-MACOS.md).
 git clone https://github.com/Nicotina4ever/rvc-portable.git ~/opt/rvc-portable
 cd ~/opt/rvc-portable
 chmod +x setup.sh run.sh
-./setup.sh --profile cuda118    # oppure --profile cpu
+./setup.sh --profile cuda118    # oppure --profile cpu / auto
 ./run.sh
 ```
 

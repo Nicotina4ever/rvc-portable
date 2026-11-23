@@ -42,6 +42,7 @@ class InferParams:
     method: str = "rmvpe"
     protect: float = 0.33
     index_rate: float = 0.3
+    formant: int = 0
     filter_radius: int = 3
     rms_mix_rate: float = 0.25
     resample_sr: int = 0
@@ -55,6 +56,7 @@ class InferParams:
             method=str(audio.method),
             protect=float(audio.protect),
             index_rate=float(audio.index_rate),
+            formant=int(getattr(audio, "formant", 0) or 0),
             filter_radius=int(audio.filter_radius),
             rms_mix_rate=float(audio.rms_mix_rate),
             resample_sr=int(audio.resample_sr),

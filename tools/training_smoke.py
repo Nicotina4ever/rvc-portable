@@ -7,7 +7,7 @@ import os
 import sys
 import time
 
-ROOT = r"K:\AI\rvc-portable"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 import numpy as np  # noqa: E402
@@ -106,8 +106,8 @@ def run(stage: str) -> None:
 
 run("preprocess")
 run("f0")
-print("filelist:", build_filelist(EXP, "v2", True, pipeline.MUTE_DIR, 48000))
 run("hubert")
+print("filelist:", build_filelist(EXP, "v2", True, pipeline.MUTE_DIR, 48000))
 run("train")
 run("index")
 print("SMOKE OK")

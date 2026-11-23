@@ -499,6 +499,7 @@ def apply_payload(manager: SettingsManager, payload: Dict[str, Any]) -> Dict[str
     number("pitch", -24, 24, integer=True)
     number("protect", 0.0, 0.5)
     number("index_rate", 0.0, 1.0)
+    number("formant", -12, 12, integer=True)
 
     method = str(payload.get("method") or "").strip().lower()
     if method:

@@ -41,3 +41,6 @@ desktop.ini
 # Segreti locali
 .dropbox_auth.json
 data/state/
+
+# REAPER portable di test (non versionato)
+Reaper/portable/

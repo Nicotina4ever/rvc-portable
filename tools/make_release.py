@@ -31,6 +31,7 @@ APP_INCLUDE = [
     "requirements",
     "docs",
     "tools",
+    "Reaper",
     "launch.py",
     "install.conf",
     "run.bat",
@@ -39,7 +40,10 @@ APP_INCLUDE = [
     "run.command",
     "setup.bat",
     "setup.sh",
+    "setup.command",
     "README.md",
+    "ISTRUZIONI.md",
+    "LICENSE",
     "CHANGELOG.md",
     "pyproject.toml",
     ".gitattributes",
@@ -54,7 +58,7 @@ EXCLUDE_PARTS = {
     "Thumbs.db",
     "archive",
 }
-EXCLUDE_DIRS = {"tests", ".dev", ".github", "da_eliminare", "data", "Modelli", "Progetto"}
+EXCLUDE_DIRS = {"tests", ".dev", ".github", "da_eliminare", "data", "Modelli", "Progetto", "portable"}
 
 
 def _iter_files(base: str, extra_excludes=()):

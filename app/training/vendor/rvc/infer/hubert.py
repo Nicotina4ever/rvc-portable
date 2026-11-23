@@ -96,9 +96,15 @@ def extract_hubert_features(
         "output_layer": 9 if version == "v1" else 12,
     }
     with torch.no_grad():
-        logits = model.extract_features(**inputs)[0]
+        output = model.extract_features(**inputs)
+        hidden = output[0] if isinstance(output, (tuple, list)) else output
         if version == "v1":
-            feats = model.final_proj(logits[0])
+            feats = model.final_proj(hidden)
         else:
-            feats = logits[0]
-    return feats.detach().float().cpu().numpy().squeeze(0)
+            feats = hidden
+    if feats.dim() == 3:
+        if feats.shape[0] == 1:
+            feats = feats.squeeze(0)
+        elif feats.shape[1] == 1:
+            feats = feats.squeeze(1)
+    return feats.detach().float().cpu().numpy()

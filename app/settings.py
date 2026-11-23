@@ -50,6 +50,7 @@ class AudioSettings(BaseModel):
     method: str = "rmvpe"
     protect: float = Field(0.33, ge=0.0, le=0.5)
     index_rate: float = Field(0.3, ge=0.0, le=1.0)
+    formant: int = Field(0, ge=-12, le=12, description="spostamento formanti in semitoni")
     filter_radius: int = Field(3, ge=0, le=7)
     rms_mix_rate: float = Field(0.25, ge=0.0, le=1.0)
     resample_sr: int = Field(0, ge=0, le=48000)

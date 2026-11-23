@@ -22,7 +22,8 @@ chmod +x setup.sh run.sh
 ```
 
 Il bootstrap crea `runtime/` (venv Python 3.10), installa `pip<24.1` (per `omegaconf==2.0.6`),
-`requirements/base.txt` e `requirements/engine-posix.txt`, verifica il motore.
+`requirements/base.txt` e `requirements/engine-posix.txt`, scarica i pesi base HuBERT/RMVPE
+(`hubert_base.pt`, `rmvpe.pt`) e verifica il motore.
 
 Opzioni:
 
@@ -51,6 +52,14 @@ Per l'uso locale:
 1. Tab **Configurazione**: cartella input, output, modello `.pth` e indice.
 2. **Salva** → tab **Monitor** → **Avvia monitoraggio**.
 3. Metti un file audio nella cartella input.
+
+## Addestramento e REAPER
+
+- **Addestramento**: tab **Addestramento** (richiede GPU NVIDIA; con `--profile cpu` il training
+  è possibile ma molto lento). Dettagli: [TRAINING.md](TRAINING.md).
+- **REAPER**: `Reaper/RVC_Portable.lua` + `Reaper/RVC_Portable_Settings.lua`. Nel dialog indica
+  Python `~/opt/rvc-portable/runtime/bin/python3` e helper `~/opt/rvc-portable/tools/reaper_helper.py`.
+  Dettagli: [../Reaper/README.md](../Reaper/README.md).
 
 ## Verifica
 

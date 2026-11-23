@@ -26,7 +26,7 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 
 | Metodo | Percorso | Request | Response |
 |---|---|---|---|
-| GET | `/api/health` | — | `{"status":"ok","version":"3.0.0","uptime_s":12.3}` (senza token) |
+| GET | `/api/health` | — | `{"status":"ok","version":"3.2.0","uptime_s":12.3}` (senza token) |
 | GET | `/api/meta` | — | `{"app","version","python","platform","paths","engine": EngineStatus, "started_at"}` |
 | GET | `/api/system/diagnostics?force=false` | — | `DoctorReport` |
 | POST | `/api/system/shutdown` | — | `{"ok":true}` (spegnimento asincrono) |
@@ -63,13 +63,22 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 | DELETE | `/api/cloud/dropbox` | — | `{"ok":true}` (token rimosso) |
 | GET | `/api/android` | — | `{"enabled","shared_dir","roots":[DropboxRoot],"paths":{…},"models_count","config_exists","models_exists","status_exists","pc_status":object,"config_sync":{…}}` |
 | POST | `/api/android/detect` | — | `{"roots":[DropboxRoot],"suggested_shared_dir":str}` |
-| POST | `/api/android/preset` | `{"shared_dir":str?}` | `{"ok":true,"summary":{…},"status": AndroidStatus}` (crea cartelle, `modelli.txt`, config; avvia il monitor) |
+| POST | `/api/android/preset` | `{"shared_dir":str?}` | `{"ok":true,"summary":{…},"status": AndroidStatus}` (crea cartelle, `modelli.txt`, config; il monitor NON viene avviato: chiedi conferma all'utente) |
 | POST | `/api/android/sync` | — | `{"ok":true,"summary":{"models":int,"paths":{…}}}` |
 | POST | `/api/android/import` | — | `{"ok":true,"result":{"mode":"android|full","applied":[str],"skipped":[str]}}` |
 | PUT | `/api/android/config` | payload piatto Android o Settings v3 | `{"ok":true,"result":{…}}` |
 | GET | `/api/android/config` | — | `{"path":str,"payload":object\|null}` |
 | GET | `/api/locales` | — | `{"languages":["it","en"],"default":"it"}` |
 | GET | `/api/locales/{lang}` | — | `{"lang":"it","strings":{…}}` |
+| GET | `/api/training` | — | `{"capabilities":{enabled,cuda,disk_free_gb,assets,presets,defaults},"jobs":[TrainingJob]}` |
+| POST | `/api/training/analyze` | `{"source":str}` | `{"report":{files,total_s,sample_rates,channels,ready,warnings,errors}}` |
+| POST | `/api/training` | `{"source":str,"name":str?,"preset":"veloce|bilanciato|qualita",overrides:{sample_rate,version,f0,f0_method,epochs,batch_size,save_every,formant}}` | `{"job":TrainingJob,"jobs":[…]}` |
+| GET | `/api/training/{id}` | — | `{"job":TrainingJob}` |
+| GET | `/api/training/{id}/log?offset=0&limit=200` | — | `{"offset","total","lines":[str]}` |
+| POST | `/api/training/{id}/cancel` | — | `{"job":TrainingJob}` |
+| POST | `/api/training/{id}/resume` | — | `{"job":TrainingJob}` |
+| POST | `/api/training/{id}/test` | `{"sample":str?}` | `{"job_id":str,"sample":str}` (accoda una conversione) |
+| DELETE | `/api/training/{id}` | — | `{"deleted":str}` |
 | GET | `/api/events?since=<id>` | — | `text/event-stream` |
 
 Statici: `/` → `web/index.html`, `/css/*`, `/js/*`, `/assets/*`, `/locales/*`. Qualsiasi rotta non-API
@@ -85,7 +94,7 @@ sconosciuta restituisce `index.html` (SPA fallback).
     "input_dir": "", "output_dir": "", "model_path": "", "index_path": "",
     "extra_model_dirs": [],
     "model_version": "v2", "pitch": 0, "method": "rmvpe", "protect": 0.33,
-    "index_rate": 0.3, "filter_radius": 3, "rms_mix_rate": 0.25,
+    "index_rate": 0.3, "formant": 0, "filter_radius": 3, "rms_mix_rate": 0.25,
     "resample_sr": 0, "output_format": "wav"
   },
   "engine": { "device": "auto", "warm_model": true, "idle_unload_minutes": 15, "max_concurrency": 1 },

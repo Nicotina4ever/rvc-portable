@@ -54,6 +54,16 @@ class SummaryWriter:  # noqa: N801 - nome compatibile con torch.utils.tensorboar
     def add_histogram(self, *_args, **_kwargs) -> None:
         return None
 
+    def add_scalars(self, main_tag: str, tag_scalar_dict: Dict[str, Any], global_step: Optional[int] = None, **_kwargs) -> None:
+        for name, value in (tag_scalar_dict or {}).items():
+            self.add_scalar("%s/%s" % (main_tag, name) if main_tag else str(name), value, global_step)
+
+    def add_image(self, *_args, **_kwargs) -> None:
+        return None
+
+    def add_audio(self, *_args, **_kwargs) -> None:
+        return None
+
     def flush(self) -> None:
         return None
 

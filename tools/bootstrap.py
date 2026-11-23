@@ -191,6 +191,46 @@ def install_windows(args) -> int:
     return 2
 
 
+BASE_MODELS_SCRIPT = r"""
+import os, sys, urllib.request
+
+import rvc_python
+
+BASE = os.path.join(os.path.dirname(os.path.abspath(rvc_python.__file__)), "base_model")
+os.makedirs(BASE, exist_ok=True)
+FILES = {
+    "hubert_base.pt": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt",
+    "rmvpe.pt": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/rmvpe.pt",
+}
+for name, url in FILES.items():
+    target = os.path.join(BASE, name)
+    if os.path.isfile(target) and os.path.getsize(target) > 1024 * 1024:
+        print("pesi base: %s gia' presente" % name, flush=True)
+        continue
+    print("scarico pesi base: %s" % name, flush=True)
+    temp = target + ".part"
+    request = urllib.request.Request(url, headers={"User-Agent": "RVC-Portable"})
+    with urllib.request.urlopen(request, timeout=60) as response, open(temp, "wb") as handle:
+        total = int(response.headers.get("Content-Length") or 0)
+        done = 0
+        while True:
+            chunk = response.read(1024 * 1024)
+            if not chunk:
+                break
+            handle.write(chunk)
+            done += len(chunk)
+            if total:
+                print("  %s %d%%" % (name, int(done * 100 / total)), flush=True)
+    os.replace(temp, target)
+print("pesi base pronti in %s" % BASE, flush=True)
+"""
+
+
+def ensure_base_models(python: str) -> int:
+    """Scarica hubert_base.pt e rmvpe.pt se il pacchetto rvc_python non li include."""
+    return _run([python, "-B", "-c", BASE_MODELS_SCRIPT], check=False)
+
+
 def _find_posix_python() -> Optional[str]:
     import shutil
 
@@ -232,6 +272,7 @@ def install_posix(args) -> int:
         _run(common + ["-r", engine])
     else:
         _run(common + ["-r", engine])
+    ensure_base_models(venv_python)
     probe = verify(venv_python)
     if not (probe.get("rvc_python") and probe.get("fairseq")):
         print("Avvertenza: motore incompleto.")

@@ -81,6 +81,7 @@ DEFAULT_PARAMS = {
     "method": "rmvpe",
     "protect": 0.33,
     "index_rate": 0.3,
+    "formant": 0,
     "filter_radius": 3,
     "rms_mix_rate": 0.25,
     "resample_sr": 0,
@@ -627,6 +628,7 @@ class RvcWorker:
                     "engine_error",
                     "sample rate di output non determinabile (tgt_sr=%r)" % getattr(vc, "tgt_sr", None),
                 )
+            audio = _apply_formant(audio, sample_rate, int(params.get("formant", 0) or 0))
             _emit_stage(STAGE_WRITE)
             write_audio_atomic(
                 output_path,
@@ -777,7 +779,7 @@ def _normalize_params(params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
             result[key] = float(result[key])
         except (TypeError, ValueError):
             result[key] = DEFAULT_PARAMS[key]
-    for key in ("filter_radius", "resample_sr"):
+    for key in ("filter_radius", "resample_sr", "formant"):
         try:
             result[key] = int(result[key])
         except (TypeError, ValueError):
@@ -805,6 +807,54 @@ def _normalize_requested_device(device: str) -> str:
     if value == "mps":
         return "mps"
     return "cpu"
+
+
+def _apply_formant(audio, sample_rate: int, semitones: int):
+    """Sposta i formanti (inviluppo spettrale) senza cambiare l'intonazione.
+
+    Usa pyworld per separare F0 e inviluppo, deforma l'asse delle frequenze e
+    risintetizza. E' un'operazione best-effort: se pyworld non e' disponibile o
+    la sintesi fallisce, l'audio resta invariato.
+    """
+    value = int(semitones or 0)
+    rate = int(sample_rate or 0)
+    if value == 0 or rate <= 0:
+        return audio
+    value = max(-12, min(12, value))
+    try:
+        import numpy as np
+        import pyworld as pw
+    except Exception:  # pragma: no cover - dipende dal runtime
+        return audio
+    try:
+        x = np.asarray(audio, dtype=np.float64)
+        if x.ndim != 1 or x.size == 0:
+            return audio
+        f0, times = pw.harvest(
+            x, rate, f0_floor=60.0, f0_ceil=800.0, frame_period=10.0
+        )
+        envelope = pw.cheaptrick(x, f0, times, rate)
+        bins = int(envelope.shape[1])
+        factor = 2.0 ** (float(value) / 12.0)
+        source_positions = np.clip(np.arange(bins) / factor, 0, bins - 1)
+        bin_positions = np.arange(bins, dtype=np.float64)
+        warped = np.empty_like(envelope)
+        for frame in range(envelope.shape[0]):
+            warped[frame] = np.interp(source_positions, bin_positions, envelope[frame])
+        converted = pw.synthesize(f0, warped, rate, frame_period=10.0)
+        converted = np.asarray(converted, dtype=np.float64)
+        if converted.size == 0:
+            return audio
+        if converted.size < x.size:
+            converted = np.pad(converted, (0, x.size - converted.size))
+        else:
+            converted = converted[: x.size]
+        rms_in = float(np.sqrt(np.mean(np.square(x))) + 1e-9)
+        rms_out = float(np.sqrt(np.mean(np.square(converted))) + 1e-9)
+        converted = converted * (rms_in / rms_out)
+        return np.asarray(converted, dtype=np.float32)
+    except Exception:  # pragma: no cover - sintesi non disponibile
+        return audio
 
 
 def _validate_audio_result(raw) -> Any:

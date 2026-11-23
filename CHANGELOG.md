@@ -2,6 +2,36 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.2.0] — 2026-11-23
+
+Addestramento integrato, integrazione REAPER, auto-test dei parametri e distribuzione Linux/macOS.
+
+### Aggiunto
+
+- **Addestramento RVC** (tab **Addestramento**): da dataset a `.pth` + `.index`, con preset
+  Veloce/Bilanciato/Qualità, avanzamento per stadio, log, annulla/riprendi, test del modello.
+  Pipeline vendorizzata RVC1006Nvidia (MIT) con HuBERT fairseq e RMVPE del runtime.
+- **REAPER**: azione `Reaper/RVC_Portable.lua` (voce→voce sugli item selezionati, output in
+  `RVC_out/` e traccia figlia), pannello impostazioni e **auto-test** su 10 s prima del file intero.
+- **Auto-test parametri**: griglia metodo/index rate/protezione misurata su intonazione, timbro,
+  articolazione e clipping (`app/tuning/auto_tune.py`, opzione `--auto` dell'helper).
+- **Formant shift** (−12…+12 semitoni) implementato con pyworld, disponibile su PC, Android e REAPER.
+- **Android 4.0**: schermate Registra/Tracce/Voce, menu “Altro” per gli strumenti avanzati,
+  rotazione libera e layout a due colonne in orizzontale, formant nella configurazione remota.
+- **Linux/macOS**: `setup.command`, download automatico dei pesi base in `tools/bootstrap.py`,
+  archivi di release per linux-x86_64 e macOS con Reaper e training inclusi.
+
+### Corretto
+
+- **Monitor silenzioso**: nessun avvio automatico, log di ciclo a DEBUG, loop event-driven con
+  spegnimento su inattività e stop immediato.
+- `config.json` Dropbox non viene più riscritto in continuazione (heartbeat separato).
+- Android: remote config ora include `formant`; build 4.0 (versionCode 8).
+
+### Note
+
+- Il training richiede GPU NVIDIA (Windows/Linux); su macOS gira su CPU ed è sconsigliato.
+- Il runtime Windows resta l'asset separato `runtime-v3.0.0` (invariato).
 ## [3.0.0] — 2026-10-20
 
 Riscrittura completa: architettura frontend/backend, ripristino del motore RVC, multi-OS e riordino.

@@ -1,6 +1,6 @@
 # Istruzioni pratiche — RVC Portable e RVC-Droid
 
-Ultimo aggiornamento: 20 ottobre 2026.
+Ultimo aggiornamento: 23 novembre 2026.
 
 ## 1. Stato attuale (già online)
 
@@ -10,9 +10,9 @@ Non devi fare nulla per pubblicare: i repository e le release esistono già.
 |---|---|
 | Sorgenti PC | <https://github.com/Nicotina4ever/rvc-portable> |
 | Sorgenti Android | <https://github.com/Nicotina4ever/rvc-droid> |
-| Release PC 3.0 | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.0.0> |
+| Release PC 3.2 | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.2.0> |
 | Runtime PC (Windows) | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/runtime-v3.0.0> |
-| APK Android 2.1 | <https://github.com/Nicotina4ever/rvc-droid/releases/tag/v2.1> |
+| APK Android 4.0 | <https://github.com/Nicotina4ever/rvc-droid/releases/tag/v4.0> |
 
 Il runtime Windows (3,5 GB in 2 parti) è già caricato e `install.conf` punta alla release
 corretta. Ho provato un'installazione **da clone pulito**: `setup.bat` scarica le parti, verifica
@@ -36,7 +36,7 @@ tutto da solo. Al primo avvio: **Cloud → Rileva Dropbox → Attiva preset**, p
 
 ### Android
 
-Installa `RVC-Droid-2.1.apk` dalla release v2.1. Se hai già installata una versione con la stessa
+Installa `RVC-Droid-4.0.apk` dalla release v4.0. Se hai già installata una versione con la stessa
 firma, si aggiorna sopra; se il telefono rifiuta l'installazione, disinstalla la vecchia versione
 (i modelli non sono nell'APK, non perdi nulla).
 
@@ -179,7 +179,19 @@ Prossimi passi possibili (da fare solo se vuoi):
 3. Automatizzare la pubblicazione delle release con una GitHub Action (oggi si fa da web UI).
 4. Ripulire gli archivi locali `Necessari/` e `Dataset_spot/` (non servono più al flusso normale).
 
-## 8. Comandi di verifica
+## 8. Addestramento e REAPER (novita 3.2)
+
+- **Addestramento**: tab **Addestramento** -> dataset (cartella/ZIP) -> Analizza -> preset -> Avvia.
+  Produce `.pth` + `.index` in `Modelli/`. Guida completa: [docs/TRAINING.md](docs/TRAINING.md).
+- **REAPER**: `Reaper/RVC_Portable.lua` converte gli item selezionati e li importa in una traccia
+  figlia (`RVC_out/`), con auto-test su 10 s e formant. Guida: [Reaper/README.md](Reaper/README.md).
+- **Linux/macOS**: `./setup.sh` installa tutto (venv + motore + pesi base), `./setup.command` su
+  macOS; archivi di release separati per linux-x86_64 e macOS. Test su VM: se qualcosa manca,
+  incolla l'errore del bootstrap.
+- **Android 4.0**: rotazione libera, layout a due colonne in orizzontale, schermate
+  Registra/Tracce/Voce, menu "Altro" per timeline/mixer/video/gobbo.
+
+## 9. Comandi di verifica
 
 PC:
 

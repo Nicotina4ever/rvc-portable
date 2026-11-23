@@ -597,8 +597,9 @@ class TrainingService:
             run("preprocess")
             if settings["f0"]:
                 run("f0")
+            run("hubert")
 
-            # filelist (Python puro)
+            # filelist (Python puro): richiede le feature HuBERT gia' estratte.
             self._update(job_id, stage="filelist", message="Preparazione liste", progress=self._stage_progress("filelist", 0.0))
             info = build_filelist(
                 exp_dir,
@@ -610,7 +611,6 @@ class TrainingService:
             self._append_log(log_path, "filelist: %d clip (+%d mute)" % (info["entries"], info["mute"]))
             self._update(job_id, progress=self._stage_progress("filelist", 1.0))
 
-            run("hubert")
             run("train")
             run("index")
 
