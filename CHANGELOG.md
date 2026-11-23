@@ -32,6 +32,9 @@ Addestramento integrato, integrazione REAPER, auto-test dei parametri e distribu
 
 - Il training richiede GPU NVIDIA (Windows/Linux); su macOS gira su CPU ed è sconsigliato.
 - Il runtime Windows resta l'asset separato `runtime-v3.0.0` (invariato).
+- Pulizia progetto: artefatti di test, profilo browser e runtime 3.0.0 spostati in `da_eliminare/`
+  (~4,8 GB), con `tools/cleanup_project.py` per ripetere l'operazione. Stato aggiornato in
+  [docs/STATUS.md](docs/STATUS.md).
 ## [3.0.0] — 2026-10-20
 
 Riscrittura completa: architettura frontend/backend, ripristino del motore RVC, multi-OS e riordino.

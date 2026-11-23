@@ -187,6 +187,9 @@ e `.dev/`: vedi `.gitignore` e `tools/check_repo.py`.
 | [docs/CLOUD-SYNC.md](docs/CLOUD-SYNC.md) | sincronizzazione config via cartella locale o Dropbox API |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | backend, motore, coda job, sicurezza |
 | [docs/API-CONTRACT.md](docs/API-CONTRACT.md) | endpoint, schema impostazioni, eventi SSE |
+| [docs/STATUS.md](docs/STATUS.md) | stato attuale, cosa è testato, cosa resta da provare |
+| [docs/TRAINING.md](docs/TRAINING.md) | addestramento modelli `.pth` + `.index` da dataset |
+| [Reaper/README.md](Reaper/README.md) | integrazione REAPER: azione, auto-test, formati |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | diagnosi e rimedi |
 | [docs/PUBLISHING.md](docs/PUBLISHING.md) | pubblicare su GitHub e creare l'asset runtime |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | sviluppo, test, regole del progetto |
