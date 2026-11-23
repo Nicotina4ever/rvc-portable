@@ -649,3 +649,44 @@ body[data-auth="required"] .app-footer {
   color: var(--text);
   font-weight: 600;
 }
+
+/* ---------------------------------------------------- header: menu compatto */
+
+.nav-toggle {
+  display: none;
+}
+
+@media (max-width: 1440px) {
+  .app-header {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+
+  .app-nav {
+    display: none;
+    order: 3;
+    flex-basis: 100%;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 2px;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  .app-header.nav-open .app-nav {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+}
+
+/* ------------------------------------------- rifiniture "a mano" (meno neon) */
+
+.brand-logo {
+  background: var(--surface-2);
+  box-shadow: none;
+}

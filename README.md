@@ -23,7 +23,7 @@ senza console e senza installazioni di sistema.
 
 | | |
 |---|---|
-| **Versione** | 3.3.3 |
+| **Versione** | 3.3.4 |
 | **Motore** | rvc-python 0.1.5 + fairseq 0.12.2 + PyTorch 2.0.0 (CUDA 11.8) |
 | **Runtime Windows** | CPython 3.9.13 portatile, scaricato al primo `setup.bat` (~3,5 GB) |
 | **Runtime macOS/Linux** | Python 3.10 + venv gestito da `tools/bootstrap.py` |

@@ -1134,3 +1134,37 @@
 .help-tip.is-open .help-tip-bubble {
   display: block;
 }
+
+/* ------------------------------------------- stile piu' sobrio, meno neon */
+
+.btn:hover {
+  border-color: var(--border-strong);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: none;
+}
+
+.btn-primary:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.progress::-webkit-progress-value,
+.progress::-moz-progress-bar {
+  background: var(--accent);
+}
+
+.range::-webkit-slider-thumb {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+
+.range::-moz-range-thumb {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface-2);
+}

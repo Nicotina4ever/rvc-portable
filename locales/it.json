@@ -671,5 +671,8 @@
   "training.diskUsed": "Spazio training",
   "training.cleanupConfirmTitle": "Pulire la cache del training?",
   "training.cleanupConfirm": "Verranno eliminati dataset copiato, feature, checkpoint intermedi e output temporanei. Il modello finale in Modelli/ resta. Dopo la pulizia non potrai riprendere il job senza rifare il training.",
-  "training.cleanupAllConfirm": "Pulire la cache di tutti i job chiusi? I modelli finali restano in Modelli/; i job non saranno più riprendibili."
+  "training.cleanupAllConfirm": "Pulire la cache di tutti i job chiusi? I modelli finali restano in Modelli/; i job non saranno più riprendibili.",
+  "header.menu": "Mostra/nascondi menu",
+  "header.menuOpen": "Nascondi menu",
+  "header.menuClosed": "Mostra menu"
 }

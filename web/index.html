@@ -176,6 +176,9 @@
       <path d="M5 3.5h11.5L21 8v11.5a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 4 19.5v-14A1.5 1.5 0 0 1 5.5 3.5Z"/>
       <path d="M8 3.5v5h7v-5M8 21v-6h8v6"/>
     </symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 6h16M4 12h16M4 18h16"/>
+    </symbol>
     <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11H12l1-8Z"/>
     </symbol>
@@ -226,6 +229,12 @@
         <span data-i18n="nav.setup">Setup</span>
       </button>
     </nav>
+
+    <button class="nav-toggle btn btn-ghost btn-icon" id="nav-toggle" type="button"
+            aria-controls="app-nav" aria-expanded="false"
+            aria-label="Mostra menu" data-i18n-aria-label="header.menu" title="Menu">
+      <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-menu"></use></svg>
+    </button>
 
     <div class="header-controls">
       <button class="status-pill" id="engine-pill" type="button" data-state="unknown" aria-label="Stato del motore" data-i18n-aria-label="header.engineLabel">

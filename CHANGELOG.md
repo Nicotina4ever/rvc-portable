@@ -2,6 +2,22 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.3.4] — 2026-11-23
+
+Correzione Addestramento, menu adattivo e stile più sobrio.
+
+### Corretto
+
+- **Errore di avvio in Addestramento** (`Cannot access 'finetuneField' before initialization`):
+  il campo fine-tune veniva letto prima della sua creazione; ora la card si apre correttamente.
+- **Menu in overlap** sulle finestre medie (es. 1219 px): sotto i 1440 px la navigazione passa a
+  un pulsante hamburger con mostra/nascondi, chiusura su selezione, Escape e click esterno.
+
+### Modificato
+
+- Stile meno "neon": pulsanti primari solidi, progress e slider senza gradienti, stati attivi con
+  bordo sottile invece dell'alone; logo e badge più sobri.
+
 ## [3.3.3] — 2026-11-23
 
 Fine-tune in evidenza e pulizia cache dei training.

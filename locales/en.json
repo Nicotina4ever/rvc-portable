@@ -671,5 +671,8 @@
   "training.diskUsed": "Training space",
   "training.cleanupConfirmTitle": "Clean training cache?",
   "training.cleanupConfirm": "Copied dataset, features, intermediate checkpoints and temporary outputs will be removed. The final model in Modelli/ is kept. After cleanup the job cannot be resumed without retraining.",
-  "training.cleanupAllConfirm": "Clean the cache of all closed jobs? Final models stay in Modelli/; jobs will no longer be resumable."
+  "training.cleanupAllConfirm": "Clean the cache of all closed jobs? Final models stay in Modelli/; jobs will no longer be resumable.",
+  "header.menu": "Show/hide menu",
+  "header.menuOpen": "Hide menu",
+  "header.menuClosed": "Show menu"
 }

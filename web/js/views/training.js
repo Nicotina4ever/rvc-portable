@@ -122,11 +122,12 @@ export const trainingView = {
       hint: t("training.nameHint"),
       info: t("training.info.name"),
     });
+    const finetuneHost = div("training-finetune");
     formCard.body.append(
       sourceField.el,
       div("button-row button-row-wrap", folderButton, zipButton, analyzeButton),
       nameField.el,
-      div("training-finetune", finetuneField.el),
+      finetuneHost,
       h("p", { class: "field-hint", text: t("training.tips") })
     );
 
@@ -203,6 +204,7 @@ export const trainingView = {
       hint: t("training.finetuneHint"),
       info: t("training.info.finetune"),
     });
+    finetuneHost.appendChild(finetuneField.el);
 
     const advanced = h(
       "details",

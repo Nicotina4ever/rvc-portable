@@ -1472,3 +1472,15 @@
   font-size: 0.78rem;
   font-family: var(--font-mono, ui-monospace, Consolas, monospace);
 }
+
+/* --------------------------------------------- stati attivi senza alone neon */
+
+.model-card.is-active,
+.device-card:has(.device-radio:checked) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.model-card.is-active {
+  background: var(--surface);
+}
