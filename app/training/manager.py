@@ -503,15 +503,29 @@ class TrainingService:
         self._update(job_id, message="Annullamento in corso...")
         return self.get_job(job_id) or {}
 
-    def resume(self, job_id: str) -> Dict[str, Any]:
+    def resume(self, job_id: str, add_epochs: int = 0) -> Dict[str, Any]:
         job_id = str(job_id)
+        add_epochs = int(add_epochs or 0)
         with self._lock:
             job = self._jobs.get(job_id)
             if job is None:
                 raise TrainingError("job non trovato", "training_not_found")
-            if job["status"] not in ("failed", "canceled"):
+            if job["status"] not in ("failed", "canceled", "completed"):
                 raise TrainingError(
-                    "Si puo' riprendere solo un job fallito o annullato", "training_resume_invalid"
+                    "Si puo' riprendere solo un job fallito, annullato o completato",
+                    "training_resume_invalid",
+                )
+            if job["status"] == "completed" and add_epochs <= 0:
+                raise TrainingError(
+                    "Training gia' completato: indica quante epoche aggiungere",
+                    "training_resume_invalid",
+                )
+            exp_dir = os.path.join(job["dir"], "logs", job["exp_name"])
+            if not (os.path.isdir(exp_dir) and _has_files(exp_dir)):
+                raise TrainingError(
+                    "Cache del training gia' pulita: non e' piu' riprendibile, "
+                    "riavvia con un nuovo job (o usa Fine-tune dal modello).",
+                    "training_not_resumable",
                 )
             if any(
                 self._jobs.get(other, {}).get("status") in ("queued", "running")
@@ -521,6 +535,14 @@ class TrainingService:
                     "C'e' gia' un training attivo: attendi o annullalo.",
                     "training_busy",
                 )
+            if add_epochs > 0:
+                settings = dict(job.get("settings") or {})
+                settings["epochs"] = int(settings.get("epochs", 0) or 0) + add_epochs
+                settings["save_every"] = int(settings.get("save_every", 20) or 20)
+                job["settings"] = settings
+                job["total_epochs"] = int(settings["epochs"])
+                job["force_train_stage"] = True
+                job["epoch"] = 0
             job.update(
                 status="queued",
                 stage="queued",
@@ -678,7 +700,9 @@ class TrainingService:
             def run(stage_name: str) -> None:
                 if cancel.is_set():
                     raise TrainingError("Annullato", "training_canceled")
-                if self._stage_already_done(stage_name, ctx):
+                if stage_name == "train" and job.get("force_train_stage"):
+                    pass  # continuazione esplicita: il train deve ripartire dai checkpoint
+                elif self._stage_already_done(stage_name, ctx):
                     self._append_log(log_path, "stadio %s: gia' completato, salto" % stage_name)
                     self._update(
                         job_id,
@@ -849,7 +873,9 @@ class TrainingService:
             feature = "3_feature256" if ctx["settings"]["version"] == "v1" else "3_feature768"
             return _has_files(os.path.join(exp_dir, feature))
         if stage == "train":
-            return _has_files(os.path.join(ctx["job_dir"], "weights"))
+            return os.path.isfile(
+                os.path.join(ctx["job_dir"], "weights", ctx["exp_name"] + ".pth")
+            )
         if stage == "index":
             return _has_files(os.path.join(ctx["job_dir"], "output"))
         return False

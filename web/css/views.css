@@ -1484,3 +1484,9 @@
 .model-card.is-active {
   background: var(--surface);
 }
+
+
+.training-continue-form .input {
+  margin-top: 6px;
+  max-width: 160px;
+}

@@ -225,7 +225,8 @@ export const endpoints = {
         encodeURIComponent(limit)
     ),
   trainingCancel: (id) => api.post("/api/training/" + encodeURIComponent(id) + "/cancel", {}),
-  trainingResume: (id) => api.post("/api/training/" + encodeURIComponent(id) + "/resume", {}),
+  trainingResume: (id, addEpochs) =>
+    api.post("/api/training/" + encodeURIComponent(id) + "/resume", { add_epochs: addEpochs || 0 }),
   trainingTest: (id, sample) =>
     api.post("/api/training/" + encodeURIComponent(id) + "/test", { sample: sample || "" }),
   trainingDelete: (id) => api.del("/api/training/" + encodeURIComponent(id)),

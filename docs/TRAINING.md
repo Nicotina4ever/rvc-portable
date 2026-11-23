@@ -119,6 +119,10 @@ Se mancano e il download è abilitato, vengono scaricati da HuggingFace
   epoche rischiano di dimenticare la voce originale (catastrophic forgetting).
 - **Un solo training alla volta**: il backend rifiuta un secondo job finché il primo è in corso o
   in coda. Annulla o attendi prima di avviarne un altro.
+- **Riprendere/continuare**: "Riprendi" sui job annullati/falliti riparte dallo stadio rimasto;
+  "Continua training" sui job completati chiede quante epoche aggiungere e riparte dall'ultimo
+  checkpoint. Entrambi richiedono la cache del job (se l'hai pulita, il bottone avvisa che serve
+  un nuovo job o il fine-tune dal modello).
 
 ## 8. Pulire la cache di un training
 

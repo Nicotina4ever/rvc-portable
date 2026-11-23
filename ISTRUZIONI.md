@@ -10,7 +10,7 @@ Non devi fare nulla per pubblicare: i repository e le release esistono già.
 |---|---|
 | Sorgenti PC | <https://github.com/Nicotina4ever/rvc-portable> |
 | Sorgenti Android | <https://github.com/Nicotina4ever/rvc-droid> |
-| Release PC 3.3.5 | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.5> |
+| Release PC 3.3.6 | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.6> |
 | Runtime PC (Windows) | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/runtime-v3.0.0> |
 | Stato del progetto | [docs/STATUS.md](docs/STATUS.md) |
 | APK Android 4.0 | <https://github.com/Nicotina4ever/rvc-droid/releases/tag/v4.0> |

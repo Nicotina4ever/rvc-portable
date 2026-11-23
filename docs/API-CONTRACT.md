@@ -26,7 +26,7 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 
 | Metodo | Percorso | Request | Response |
 |---|---|---|---|
-| GET | `/api/health` | — | `{"status":"ok","version":"3.3.5","uptime_s":12.3}` (senza token) |
+| GET | `/api/health` | — | `{"status":"ok","version":"3.3.6","uptime_s":12.3}` (senza token) |
 | GET | `/api/meta` | — | `{"app","version","python","platform","paths","engine": EngineStatus, "started_at"}` |
 | GET | `/api/system/diagnostics?force=false` | — | `DoctorReport` |
 | POST | `/api/system/shutdown` | — | `{"ok":true}` (spegnimento asincrono) |
@@ -80,7 +80,7 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 | POST | `/api/training/{id}/cleanup` | — | `{"job":TrainingJob,"freed_mb":float}` |
 | POST | `/api/training/cleanup` | — | `{"cleaned":int,"freed_mb":float}` |
 | POST | `/api/training/{id}/cancel` | — | `{"job":TrainingJob}` |
-| POST | `/api/training/{id}/resume` | — | `{"job":TrainingJob}` |
+| POST | `/api/training/{id}/resume` | `{"add_epochs":int?}` | `{"job":TrainingJob}` (interrotti: riprende; completati: serve `add_epochs>0`) |
 | POST | `/api/training/{id}/test` | `{"sample":str?}` | `{"job_id":str,"sample":str}` (accoda una conversione) |
 | DELETE | `/api/training/{id}` | — | `{"deleted":str}` |
 | GET | `/api/events?since=<id>` | — | `text/event-stream` |

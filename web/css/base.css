@@ -650,11 +650,7 @@ body[data-auth="required"] .app-footer {
   font-weight: 600;
 }
 
-/* ---------------------------------------------------- header: menu compatto */
-
-.nav-toggle {
-  display: none;
-}
+/* ---------------------------------------------------- header: menu a doppia riga */
 
 @media (max-width: 1440px) {
   .app-header {
@@ -663,7 +659,6 @@ body[data-auth="required"] .app-footer {
   }
 
   .app-nav {
-    display: none;
     order: 3;
     flex-basis: 100%;
     width: 100%;
@@ -673,14 +668,6 @@ body[data-auth="required"] .app-footer {
     padding-top: var(--space-2);
     border-top: 1px solid var(--border);
     overflow: visible;
-  }
-
-  .app-header.nav-open .app-nav {
-    display: flex;
-  }
-
-  .nav-toggle {
-    display: inline-flex;
   }
 }
 

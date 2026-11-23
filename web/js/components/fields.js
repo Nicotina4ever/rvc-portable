@@ -11,7 +11,7 @@ function fieldShell(options) {
   const errorId = uid("error");
   const labelNode = label ? h("label", { class: "field-label", for: id }, label) : null;
   const labelRow = label || info
-    ? div("field-label-row", labelNode, info ? helpTip(info, t("common.help")) : null)
+    ? div("field-label-row", labelNode, info ? helpTip(info) : null)
     : null;
   const hintNode = hint ? h("p", { class: "field-hint", id: hintId, text: hint }) : null;
   const errorNode = h("p", { class: "field-error", id: errorId, hidden: true });
@@ -192,7 +192,7 @@ export function rangeField(options = {}) {
     "field-label-row",
     h("label", { class: "field-label", for: id, text: label }),
     output,
-    info ? helpTip(info, t("common.help")) : null
+    info ? helpTip(info) : null
   );
   const row = div("slider-row", range, number);
   const hintNode = hint ? h("p", { class: "field-hint", text: hint }) : null;
@@ -265,7 +265,7 @@ export function switchField(options = {}) {
   );
   const shell = div(
     "field field-switch",
-    info ? div("field-label-row", control, helpTip(info, t("common.help"))) : control,
+    info ? div("field-label-row", control, helpTip(info)) : control,
     hint ? h("p", { class: "field-hint", text: hint }) : null
   );
   return {

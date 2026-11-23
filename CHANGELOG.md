@@ -2,6 +2,30 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.3.6] — 2026-11-23
+
+GUI: suggerimenti compatti, menu sempre visibile, ripresa training chiara.
+
+### Corretto
+
+- I suggerimenti sono di nuovo piccoli pulsanti **"?"** (non più la parola "Suggerimento").
+- **Menu sempre visibile**: sotto i 1440 px la navigazione va a capo su due righe; rimosso il
+  pulsante mostra/nascondi (hamburger).
+
+### Aggiunto
+
+- **Continua training** sui job completati: chiede quante epoche aggiungere e riparte dall'ultimo
+  checkpoint salvato (`POST /api/training/{id}/resume` con `add_epochs`).
+- **Riprendi** sui job interrotti ora verifica che la cache esista ancora e avvisa se è stata
+  pulita (non più riprendibile).
+- Lo stadio "Training" non viene più saltato per errore quando esistono solo checkpoint
+  intermedi (veniva considerato già fatto).
+
+### Note
+
+- Le voci di pulizia cache (per job e "job chiusi") restano con avviso esplicito di
+  non-ripresa dopo la pulizia.
+
 ## [3.3.5] — 2026-11-23
 
 System tray Windows.

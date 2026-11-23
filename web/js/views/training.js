@@ -5,7 +5,7 @@ import { endpoints } from "../core/api.js";
 import { card, btn, badge, emptyState, kvRow, progressBar, setProgress } from "../components/ui.js";
 import { textField, selectField, switchField, pathField } from "../components/fields.js";
 import { toast } from "../components/toast.js";
-import { confirmModal } from "../components/modal.js";
+import { confirmModal, panelModal } from "../components/modal.js";
 
 const STAGE_LABELS = {
   queued: "training.stageQueued",
@@ -417,6 +417,11 @@ export const trainingView = {
       }
       if (job.status === "completed") {
         actions.appendChild(
+          btn(t("training.continue"), { variant: "secondary", iconName: "refresh", onClick: () => continueJob(job) })
+        );
+      }
+      if (job.status === "completed") {
+        actions.appendChild(
           btn(t("training.test"), { variant: "primary", iconName: "play", onClick: () => testJob(job.id) })
         );
       }
@@ -652,9 +657,41 @@ export const trainingView = {
 
     async function resumeJob(jobId) {
       try {
-        await endpoints.trainingResume(jobId);
+        await endpoints.trainingResume(jobId, 0);
         toast.success(t("training.resumed"));
         await loadCapabilities();
+      } catch (err) {
+        toast.error(err);
+      }
+    }
+
+    async function continueJob(job) {
+      const input = h("input", {
+        type: "number",
+        class: "input",
+        value: "50",
+        min: "1",
+        max: "1000",
+        "aria-label": t("training.continueAsk"),
+      });
+      const content = div(
+        "training-continue-form",
+        h("p", { class: "field-hint", text: t("training.continueHint") }),
+        input
+      );
+      const ok = await panelModal({
+        title: t("training.continue"),
+        content,
+        okLabel: t("training.continue"),
+      });
+      if (!ok) return;
+      const addEpochs = Math.max(1, Math.min(1000, Number(input.value) || 0));
+      try {
+        await endpoints.trainingResume(job.id, addEpochs);
+        toast.success(t("training.continued", { epochs: addEpochs }));
+        selectedJobId = job.id;
+        await loadCapabilities();
+        ensurePolling();
       } catch (err) {
         toast.error(err);
       }

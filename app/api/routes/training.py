@@ -36,6 +36,7 @@ _STATUS_BY_CODE = {
     "training_settings_invalid": 422,
     "training_disk_low": 507,
     "training_resume_invalid": 409,
+    "training_not_resumable": 409,
     "training_config_missing": 500,
     "training_output_missing": 500,
     "training_stage_failed": 500,
@@ -134,10 +135,16 @@ def training_cancel(job_id: str, request: Request):
 
 
 @router.post("/api/training/{job_id}/resume")
-def training_resume(job_id: str, request: Request):
+async def training_resume(job_id: str, request: Request):
     service = _service(request)
+    body = {}
     try:
-        return {"job": service.resume(job_id)}
+        body = await request.json()
+    except Exception:
+        body = {}
+    add_epochs = int((body or {}).get("add_epochs") or 0)
+    try:
+        return {"job": service.resume(job_id, add_epochs=add_epochs)}
     except TrainingError as exc:
         _raise(exc)
 

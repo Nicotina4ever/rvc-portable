@@ -35,8 +35,6 @@ const refs = {};
 function cacheRefs() {
   refs.viewRoot = document.getElementById("view-root");
   refs.nav = document.getElementById("app-nav");
-  refs.navToggle = document.getElementById("nav-toggle");
-  refs.header = document.querySelector(".app-header");
   refs.langSelect = document.getElementById("lang-select");
   refs.themeToggle = document.getElementById("theme-toggle");
   refs.helpButton = document.getElementById("help-button");
@@ -407,16 +405,6 @@ function bindShortcuts() {
 
 /* ------------------------------------------------------------------ static */
 
-function setNavOpen(open) {
-  if (!refs.header || !refs.navToggle) return;
-  refs.header.classList.toggle("nav-open", Boolean(open));
-  refs.navToggle.setAttribute("aria-expanded", String(Boolean(open)));
-  refs.navToggle.setAttribute(
-    "aria-label",
-    t(open ? "header.menuOpen" : "header.menuClosed")
-  );
-}
-
 function bindStaticControls() {
   if (refs.langSelect) {
     refs.langSelect.value = getLanguage();
@@ -425,33 +413,11 @@ function bindStaticControls() {
   if (refs.themeToggle) refs.themeToggle.addEventListener("click", toggleTheme);
   if (refs.helpButton) refs.helpButton.addEventListener("click", openHelp);
   if (refs.enginePill) refs.enginePill.addEventListener("click", () => navigate("advanced"));
-  if (refs.navToggle) {
-    refs.navToggle.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setNavOpen(!refs.header.classList.contains("nav-open"));
-    });
-  }
   if (refs.nav) {
     qsa("[data-view]", refs.nav).forEach((button) => {
-      button.addEventListener("click", () => {
-        setNavOpen(false);
-        navigate(button.dataset.view);
-      });
+      button.addEventListener("click", () => navigate(button.dataset.view));
     });
   }
-  document.addEventListener("click", (event) => {
-    if (!refs.header || !refs.header.classList.contains("nav-open")) return;
-    if (refs.nav && refs.nav.contains(event.target)) return;
-    if (refs.navToggle && refs.navToggle.contains(event.target)) return;
-    setNavOpen(false);
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") setNavOpen(false);
-  });
-  window.addEventListener("resize", () => {
-    if (window.innerWidth > 1440) setNavOpen(false);
-  });
   if (refs.footerSse) {
     refs.footerSse.title = t("sse.connected");
   }

@@ -135,7 +135,7 @@ export const modelsView = {
           div(
             "model-index-row",
             span("model-index-label", t("models.indexLabel")),
-            helpTip(t("models.info.index"), t("common.help")),
+            helpTip(t("models.info.index")),
             selector
           )
         );
