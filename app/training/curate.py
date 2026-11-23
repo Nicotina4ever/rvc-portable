@@ -367,12 +367,14 @@ def curate(
     for directory in (clean_dir, review_dir, validation_dir):
         os.makedirs(directory, exist_ok=True)
 
-    def _target(directory: str, path: str, used: set) -> str:
+    def _target(directory: str, path: str, used: set, force_wav: bool = False) -> str:
         base = re.sub(r"[^A-Za-z0-9._\- ]+", "_", os.path.basename(path)).strip(" ._")
         if not base:
             base = "audio.wav"
         stem, ext = os.path.splitext(base)
-        candidate = base
+        if force_wav:
+            ext = ".wav"
+        candidate = stem + ext
         counter = 2
         while candidate.lower() in used:
             candidate = "%s_%d%s" % (stem, counter, ext)
@@ -395,7 +397,12 @@ def curate(
         is_validation = metrics["path"] in validation_paths
         directory = validation_dir if is_validation else clean_dir
         used = used_clean if not is_validation else None
-        target = _target(directory, metrics["path"], used if used is not None else set())
+        target = _target(
+            directory,
+            metrics["path"],
+            used if used is not None else set(),
+            force_wav=bool(options.get("rewrite")),
+        )
         if options.get("rewrite"):
             ok = _rewrite(metrics["path"], target, options)
         else:
