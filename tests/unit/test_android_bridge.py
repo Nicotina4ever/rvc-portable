@@ -10,16 +10,24 @@ from app.settings import SettingsManager
 
 
 def _make_dropbox_info(tmp_path, monkeypatch):
+    """Crea un ``info.json`` Dropbox valido su Windows (LOCALAPPDATA) e POSIX (~/.dropbox)."""
     root = tmp_path / "Dropbox"
     root.mkdir()
+    payload = json.dumps({"personal": {"path": str(root), "display_name": "Mario"}})
+
+    # Windows: %LOCALAPPDATA%\\Dropbox\\info.json
     info_dir = tmp_path / "Local" / "Dropbox"
     info_dir.mkdir(parents=True)
-    (info_dir / "info.json").write_text(
-        json.dumps({"personal": {"path": str(root), "display_name": "Mario"}}),
-        encoding="utf-8",
-    )
+    (info_dir / "info.json").write_text(payload, encoding="utf-8")
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "Local"))
-    monkeypatch.setenv("USERPROFILE", str(tmp_path / "Home"))
+
+    # POSIX: $HOME/.dropbox/info.json
+    home = tmp_path / "Home"
+    (home / ".dropbox").mkdir(parents=True)
+    (home / ".dropbox" / "info.json").write_text(payload, encoding="utf-8")
+    monkeypatch.setenv("USERPROFILE", str(home))
+    if os.name != "nt":
+        monkeypatch.setenv("HOME", str(home))
     return root
 
 

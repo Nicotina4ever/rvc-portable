@@ -2,6 +2,16 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [Unreleased]
+
+### Corretto (CI)
+
+- `test_detect_dropbox_roots` ora crea l'`info.json` Dropbox anche nel percorso POSIX
+  (`~/.dropbox/info.json`) e aggiorna `HOME`: la CI Linux/macOS non fallisce piu'
+  (prima il test simulava solo il percorso Windows `%LOCALAPPDATA%`).
+- CI: il job Linux con Python 3.9 usa `ubuntu-24.04` perche' `ubuntu-latest` (26.04)
+  non pubblica piu' Python 3.9 e il setup falliva.
+
 ## [3.3.7] — 2026-11-23
 
 REAPER: impostazioni cambiabili al volo.

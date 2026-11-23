@@ -16,7 +16,9 @@ jobs:
         include:
           - os: windows-latest
             python: "3.9"
-          - os: ubuntu-latest
+          # 3.9 su Linux non e' piu' pubblicato per ubuntu 26.04 (latest):
+          # si blocca la versione di runner che ancora lo fornisce.
+          - os: ubuntu-24.04
             python: "3.9"
             install_tk: true
           - os: ubuntu-latest
