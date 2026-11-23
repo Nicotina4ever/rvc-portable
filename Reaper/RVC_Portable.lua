@@ -45,7 +45,15 @@ elseif reaper.CountSelectedTracks(0) > 0 then
 end
 
 if #items == 0 then
-  M.console("Seleziona almeno un item audio (o una traccia con audio).")
+  -- Nessuna selezione: e' il modo rapido per cambiare modello e parametri
+  -- senza caricare l'azione separata "RVC_Portable_Settings".
+  M.console("Nessun item selezionato: apro le impostazioni (per convertire, seleziona item o tracce).")
+  local updated = M.ask_settings(cfg, "RVC Portable - impostazioni")
+  if updated then
+    M.console("Impostazioni salvate: modello " .. updated.model)
+  else
+    M.console("Impostazioni non modificate.")
+  end
   return
 end
 
@@ -131,6 +139,18 @@ reaper.PreventUIRefresh(1)
 local completed = 0
 local failed = 0
 local total = #jobs
+
+M.console(string.format(
+  "Modello: %s | indice: %s | pitch %s | %s | protect %s | index rate %s | formant %s | auto-test %s",
+  cfg.model ~= "" and cfg.model or "(nessuno)",
+  cfg.index ~= "" and cfg.index or "(nessuno)",
+  tostring(tonumber(cfg.pitch) or 0),
+  tostring(cfg.method),
+  tostring(cfg.protect),
+  tostring(cfg.index_rate),
+  tostring(tonumber(cfg.formant) or 0),
+  tostring(cfg.auto) == "1" and ("si (" .. tostring(tonumber(cfg.auto_seconds) or 10) .. "s)") or "no"
+))
 
 for index, job in ipairs(jobs) do
   local output_dir = directory_of(job.source) .. string.char(92) .. tostring(cfg.output_subdir)

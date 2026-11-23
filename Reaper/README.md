@@ -34,6 +34,21 @@ Al primo avvio (o se il modello non è impostato) compare una finestra con:
 
 Le impostazioni vengono salvate in REAPER (ExtState) e valgono per tutte le sessioni.
 
+## Cambiare le impostazioni
+
+Le impostazioni salvate **si possono cambiare in qualsiasi momento**, in due modi:
+
+1. **Azione "RVC Portable Settings"** (`RVC_Portable_Settings.lua`): caricarla una volta in
+   REAPER (Actions → Load ReaScript) e lanciarla quando vuoi per rivedere modello, indice e
+   parametri. Salva e chiude.
+2. **Azione principale senza selezione**: lancia `RVC Portable` **senza alcun item/traccia
+   selezionata** → si apre direttamente il pannello impostazioni (comodo, niente secondo script
+   da caricare).
+
+All'avvio di ogni conversione la console di REAPER mostra la riga
+`Modello: … | indice: … | pitch … | metodo …` così vedi sempre con che parametri sta girando.
+Se il `.pth` configurato viene spostato o cancellato, l'azione te lo chiede di nuovo.
+
 ## Uso
 
 1. Seleziona uno o più **item audio** (o una traccia: vengono presi i suoi item).

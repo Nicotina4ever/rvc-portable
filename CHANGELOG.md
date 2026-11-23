@@ -2,6 +2,23 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.3.7] — 2026-11-23
+
+REAPER: impostazioni cambiabili al volo.
+
+### Aggiunto
+
+- L'azione **RVC Portable** lanciata **senza selezione** apre direttamente il pannello
+  impostazioni: modello, indice e parametri si cambiano in qualsiasi momento senza caricare
+  lo script Settings separato.
+- All'inizio di ogni conversione la console di REAPER mostra la riga
+  `Modello: … | indice: … | pitch … | metodo … | protect … | index rate … | formant …`.
+
+### Note
+
+- Le impostazioni restano salvate in ExtState; se il `.pth` configurato sparisce, l'azione
+  le chiede di nuovo. Nessuna modifica al motore o alle API.
+
 ## [3.3.6] — 2026-11-23
 
 GUI: suggerimenti compatti, menu sempre visibile, ripresa training chiara.

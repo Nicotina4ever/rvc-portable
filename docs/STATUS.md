@@ -7,7 +7,7 @@ cosa resta da verificare**. Aggiornalo a ogni rilascio.
 
 | Componente | Versione | Release |
 |---|---|---|
-| RVC Portable (PC) | **3.3.6** | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.6> |
+| RVC Portable (PC) | **3.3.7** | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.7> |
 | Runtime Windows | 3.0.0 (invariato) | <https://github.com/Nicotina4ever/rvc-portable/releases/tag/runtime-v3.0.0> |
 | RVC-Droid (Android) | **4.0** | <https://github.com/Nicotina4ever/rvc-droid/releases/tag/v4.0> |
 | Motore | rvc-python 0.1.5 + fairseq 0.12.2 + torch 2.0.0+cu118 | — |
@@ -110,5 +110,5 @@ Spazio tipico del progetto dopo la pulizia: ~8,5 GB totali, di cui `runtime/` 5,
   auto-scroll, confronto checkpoint e fine-tune con backup.
 - **Un solo training alla volta**: il backend risponde `409 training_busy`; i job annullati
   possono essere eliminati dalla lista.
-- **Release**: [PC 3.3.6](https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.6) ·
+- **Release**: [PC 3.3.7](https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.7) ·
   [Android 4.0](https://github.com/Nicotina4ever/rvc-droid/releases/tag/v4.0).
