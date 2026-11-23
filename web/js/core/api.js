@@ -229,6 +229,8 @@ export const endpoints = {
   trainingTest: (id, sample) =>
     api.post("/api/training/" + encodeURIComponent(id) + "/test", { sample: sample || "" }),
   trainingDelete: (id) => api.del("/api/training/" + encodeURIComponent(id)),
+  trainingCleanup: (id) => api.post("/api/training/" + encodeURIComponent(id) + "/cleanup", {}),
+  trainingCleanupAll: () => api.post("/api/training/cleanup", {}),
   eventsHistory: (since = 0) => api.get("/api/events/history?since=" + encodeURIComponent(since)),
   fileDialog: (kind, title, initial) =>
     api.post("/api/files/dialog", { kind, title: title || "", initial: initial || "" }, { timeoutMs: 600000 }),

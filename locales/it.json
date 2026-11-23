@@ -663,5 +663,13 @@
   "config.info.protect": "Alza se le consonanti si sentono male; abbassa se la voce è troppo sporca.",
   "config.info.indexRate": "Alto = più simile al modello ma più rigido; 0.2–0.4 è un buon compromesso.",
   "config.info.method": "RMVPE per parlato/spot; Harvest per canto pulito.",
-  "models.info.index": "Puoi associare qualsiasi .index a un modello, anche se il nome è diverso."
+  "models.info.index": "Puoi associare qualsiasi .index a un modello, anche se il nome è diverso.",
+  "training.cleanupCache": "Pulisci cache",
+  "training.cleanupDone": "Cache eliminata: {mb} MB liberati.",
+  "training.cleanupAll": "Pulisci cache job chiusi",
+  "training.cleanupAllDone": "{count} job puliti, {mb} MB liberati.",
+  "training.diskUsed": "Spazio training",
+  "training.cleanupConfirmTitle": "Pulire la cache del training?",
+  "training.cleanupConfirm": "Verranno eliminati dataset copiato, feature, checkpoint intermedi e output temporanei. Il modello finale in Modelli/ resta. Dopo la pulizia non potrai riprendere il job senza rifare il training.",
+  "training.cleanupAllConfirm": "Pulire la cache di tutti i job chiusi? I modelli finali restano in Modelli/; i job non saranno più riprendibili."
 }

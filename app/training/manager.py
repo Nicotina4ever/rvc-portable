@@ -22,6 +22,11 @@ from .presets import DEFAULT_PRESET, get_preset, preset_list
 STATE_VERSION = 1
 MAX_JOBS = 80
 DISK_MARGIN_BYTES = 2 * 1024 * 1024 * 1024
+CACHE_GT = "0_gt_wavs"
+CACHE_16K = "1_16k_wavs"
+CACHE_F0 = "2a_f0"
+CACHE_F0NSF = "2b-f0nsf"
+CACHE_FEATURES = ("3_feature256", "3_feature768")
 
 STAGE_RANGES = {
     "dataset": (0.0, 4.0),
@@ -90,6 +95,93 @@ class TrainingService:
     @property
     def state_path(self) -> str:
         return os.path.join(self.root_dir, "state.json")
+
+    # ------------------------------------------------------------------ cache
+    def _cache_paths(self, job: Dict[str, Any]) -> List[str]:
+        job_dir = job.get("dir") or ""
+        exp_name = job.get("exp_name") or ""
+        paths = [
+            os.path.join(job_dir, "dataset"),
+            os.path.join(job_dir, "weights"),
+            os.path.join(job_dir, "eval"),
+            os.path.join(job_dir, "output"),
+            os.path.join(job_dir, "base"),
+        ]
+        if exp_name:
+            exp_dir = os.path.join(job_dir, "logs", exp_name)
+            paths.append(exp_dir)
+        return [path for path in paths if os.path.isdir(path)]
+
+    def _size_of(self, paths: List[str]) -> int:
+        total = 0
+        for path in paths:
+            for base, _dirs, names in os.walk(path):
+                for name in names:
+                    try:
+                        total += os.path.getsize(os.path.join(base, name))
+                    except OSError:
+                        pass
+        return total
+
+    def cache_bytes(self) -> int:
+        with self._lock:
+            jobs = [dict(self._jobs[job_id]) for job_id in self._order if job_id in self._jobs]
+        total = 0
+        for job in jobs:
+            total += self._size_of(self._cache_paths(job))
+        return total
+
+    def clean_job_cache(self, job_id: str) -> Dict[str, Any]:
+        job_id = str(job_id)
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                raise TrainingError("job non trovato", "training_not_found")
+            if job.get("status") in ("running", "queued"):
+                raise TrainingError(
+                    "Annulla o attendi la fine del training prima di pulire la cache.",
+                    "training_busy",
+                )
+            paths = self._cache_paths(job)
+            before = self._size_of(paths)
+        removed = 0
+        for path in paths:
+            try:
+                shutil.rmtree(path)
+                removed += 1
+            except OSError:
+                pass
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is not None:
+                job["cache_cleaned_at"] = time.time()
+                job["cache_freed_mb"] = round(before / (1024 * 1024), 1)
+                job["resumable"] = False
+                job["message"] = "Cache del training eliminata"
+                self._save()
+        self._append_log(
+            os.path.join(job.get("dir") or "", "log.txt"),
+            "cache rimossa: %.1f MB (%d cartelle)" % (before / (1024 * 1024), removed),
+        )
+        return {"job": self.get_job(job_id) or {}, "freed_mb": round(before / (1024 * 1024), 1)}
+
+    def clean_terminal_caches(self) -> Dict[str, Any]:
+        with self._lock:
+            ids = [
+                job_id
+                for job_id in self._order
+                if self._jobs.get(job_id, {}).get("status") in ("completed", "failed", "canceled")
+            ]
+        total = 0.0
+        cleaned = 0
+        for job_id in ids:
+            try:
+                result = self.clean_job_cache(job_id)
+                total += float(result.get("freed_mb") or 0.0)
+                cleaned += 1
+            except TrainingError:
+                continue
+        return {"cleaned": cleaned, "freed_mb": round(total, 1)}
 
     # ------------------------------------------------------------- persistence
     def _load(self) -> None:
@@ -228,6 +320,7 @@ class TrainingService:
             "vendor": pipeline.VENDOR_ROOT,
             "cuda": cuda,
             "disk_free_gb": round(disk.free / 1024**3, 1),
+            "training_used_gb": round(sum(self._size_of(self._cache_paths(dict(self._jobs[job_id]))) for job_id in self._order if job_id in self._jobs) / 1024**3, 2),
             "assets": asset_info,
             "presets": preset_list(),
             "defaults": settings_dict,

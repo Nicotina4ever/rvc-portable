@@ -90,6 +90,22 @@ async def training_start(request: Request):
     return {"job": job, "jobs": service.list_jobs()}
 
 
+@router.post("/api/training/{job_id}/cleanup")
+def training_cleanup(job_id: str, request: Request):
+    service = _service(request)
+    try:
+        result = service.clean_job_cache(job_id)
+    except TrainingError as exc:
+        _raise(exc)
+    return {"job": result.get("job"), "freed_mb": result.get("freed_mb", 0)}
+
+
+@router.post("/api/training/cleanup")
+def training_cleanup_all(request: Request):
+    service = _service(request)
+    return service.clean_terminal_caches()
+
+
 @router.get("/api/training/{job_id}")
 def training_job(job_id: str, request: Request):
     service = _service(request)

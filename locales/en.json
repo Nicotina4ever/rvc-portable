@@ -663,5 +663,13 @@
   "config.info.protect": "Raise if consonants sound bad; lower if the voice is too noisy.",
   "config.info.indexRate": "High = closer to the model but stiffer; 0.2–0.4 is a safe compromise.",
   "config.info.method": "RMVPE for speech/ads; Harvest for clean singing.",
-  "models.info.index": "You can attach any .index to a model even if the name differs."
+  "models.info.index": "You can attach any .index to a model even if the name differs.",
+  "training.cleanupCache": "Clean cache",
+  "training.cleanupDone": "Cache removed: {mb} MB freed.",
+  "training.cleanupAll": "Clean closed jobs cache",
+  "training.cleanupAllDone": "{count} jobs cleaned, {mb} MB freed.",
+  "training.diskUsed": "Training space",
+  "training.cleanupConfirmTitle": "Clean training cache?",
+  "training.cleanupConfirm": "Copied dataset, features, intermediate checkpoints and temporary outputs will be removed. The final model in Modelli/ is kept. After cleanup the job cannot be resumed without retraining.",
+  "training.cleanupAllConfirm": "Clean the cache of all closed jobs? Final models stay in Modelli/; jobs will no longer be resumable."
 }

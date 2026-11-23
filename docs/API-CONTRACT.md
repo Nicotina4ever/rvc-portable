@@ -26,7 +26,7 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 
 | Metodo | Percorso | Request | Response |
 |---|---|---|---|
-| GET | `/api/health` | — | `{"status":"ok","version":"3.3.2","uptime_s":12.3}` (senza token) |
+| GET | `/api/health` | — | `{"status":"ok","version":"3.3.3","uptime_s":12.3}` (senza token) |
 | GET | `/api/meta` | — | `{"app","version","python","platform","paths","engine": EngineStatus, "started_at"}` |
 | GET | `/api/system/diagnostics?force=false` | — | `DoctorReport` |
 | POST | `/api/system/shutdown` | — | `{"ok":true}` (spegnimento asincrono) |
@@ -76,6 +76,8 @@ Codici: `unauthorized`, `forbidden_origin`, `forbidden_host`, `not_found`, `vali
 | POST | `/api/training` | `{"source":str,"name":str?,"preset":"veloce|bilanciato|qualita","test_sample":str?,"evaluate_checkpoints":bool,"finetune_model":str?,overrides:{…}}` | `{"job":TrainingJob,"jobs":[…]}` |
 | GET | `/api/training/{id}` | — | `{"job":TrainingJob}` |
 | GET | `/api/training/{id}/log?offset=0&limit=200` | — | `{"offset","total","lines":[str]}` |
+| POST | `/api/training/{id}/cleanup` | — | `{"job":TrainingJob,"freed_mb":float}` |
+| POST | `/api/training/cleanup` | — | `{"cleaned":int,"freed_mb":float}` |
 | POST | `/api/training/{id}/cancel` | — | `{"job":TrainingJob}` |
 | POST | `/api/training/{id}/resume` | — | `{"job":TrainingJob}` |
 | POST | `/api/training/{id}/test` | `{"sample":str?}` | `{"job_id":str,"sample":str}` (accoda una conversione) |

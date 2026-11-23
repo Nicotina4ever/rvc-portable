@@ -2,6 +2,23 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) · Versione semantica.
 
+## [3.3.3] — 2026-11-23
+
+Fine-tune in evidenza e pulizia cache dei training.
+
+### Aggiunto
+
+- **Fine-tune visibile** nel form Addestramento: "Rifinisci un modello esistente" non è più
+  nascosto tra i parametri avanzati; parte da un `.pth` esistente con backup automatico.
+- **Pulizia cache** per singolo job e per tutti i job chiusi, con conferma: elimina dataset
+  copiato, feature, checkpoint intermedi e output temporanei; il modello finale resta in `Modelli/`.
+  Dopo la pulizia il job non è più riprendibile (avviso esplicito).
+- Capacità training con spazio occupato e pulsanti di manutenzione.
+
+### Note
+
+- Le API di pulizia sono `POST /api/training/{id}/cleanup` e `POST /api/training/cleanup`.
+
 ## [3.3.2] — 2026-11-23
 
 Suggerimenti guidati nella GUI.

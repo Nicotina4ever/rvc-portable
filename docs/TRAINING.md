@@ -120,3 +120,11 @@ Se mancano e il download è abilitato, vengono scaricati da HuggingFace
 - **Un solo training alla volta**: il backend rifiuta un secondo job finché il primo è in corso o
   in coda. Annulla o attendi prima di avviarne un altro.
 
+## 8. Pulire la cache di un training
+
+Nella card del job (o con **"Pulisci cache job chiusi"**) puoi eliminare i file temporanei:
+dataset copiato, feature `0_gt_wavs`/`1_16k_wavs`/`2a_f0`/`2b-f0nsf`/`3_feature*`, checkpoint
+intermedi, cartella `eval/` e output temporanei. Restano il log e il modello finale in `Modelli/`.
+
+Dopo la pulizia il job **non è più riprendibile** senza rifare il training: è il compromesso per
+tenere la cartella ordinata. L'operazione chiede conferma e mostra quanti MB ha liberato.

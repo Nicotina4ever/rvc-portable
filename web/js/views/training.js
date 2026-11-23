@@ -5,6 +5,7 @@ import { endpoints } from "../core/api.js";
 import { card, btn, badge, emptyState, kvRow, progressBar, setProgress } from "../components/ui.js";
 import { textField, selectField, switchField, pathField } from "../components/fields.js";
 import { toast } from "../components/toast.js";
+import { confirmModal } from "../components/modal.js";
 
 const STAGE_LABELS = {
   queued: "training.stageQueued",
@@ -91,6 +92,12 @@ export const trainingView = {
     progressCard.hidden = true;
     const jobsCard = card({ title: t("training.jobs"), className: "training-card" });
     const jobsHost = div("training-jobs");
+    const cleanupAllButton = btn(t("training.cleanupAll"), {
+      variant: "ghost",
+      iconName: "trash",
+      onClick: () => cleanupAllJobs(),
+    });
+    jobsCard.body.appendChild(div("training-jobs-actions", cleanupAllButton));
     jobsCard.body.appendChild(jobsHost);
 
     const layout = div("training-layout", capabilityCard, formCard, reportHost, settingsCard, progressCard, jobsCard);
@@ -119,6 +126,7 @@ export const trainingView = {
       sourceField.el,
       div("button-row button-row-wrap", folderButton, zipButton, analyzeButton),
       nameField.el,
+      div("training-finetune", finetuneField.el),
       h("p", { class: "field-hint", text: t("training.tips") })
     );
 
@@ -201,7 +209,6 @@ export const trainingView = {
       { class: "training-advanced" },
       h("summary", { text: t("training.advanced") }),
       div("field-grid", epochsField.el, batchField.el, saveEveryField.el),
-      finetuneField.el,
       testSampleField.el,
       evaluateSwitch.el
     );
@@ -273,6 +280,7 @@ export const trainingView = {
         div(
           "status-stats",
           div("status-stat", span("stat-value", (capabilities.disk_free_gb || 0) + " GB"), span("stat-label", t("training.diskFree"))),
+          div("status-stat", span("stat-value", (capabilities.training_used_gb || 0) + " GB"), span("stat-label", t("training.diskUsed"))),
           div("status-stat", span("stat-value", (assets.issues || []).length), span("stat-label", t("training.assetIssues")))
         )
       ];
@@ -408,6 +416,15 @@ export const trainingView = {
       if (job.status === "completed") {
         actions.appendChild(
           btn(t("training.test"), { variant: "primary", iconName: "play", onClick: () => testJob(job.id) })
+        );
+      }
+      if (!active && !job.cache_cleaned_at) {
+        actions.appendChild(
+          btn(t("training.cleanupCache"), {
+            variant: "secondary",
+            iconName: "trash",
+            onClick: () => cleanupJob(job.id),
+          })
         );
       }
       if (!active) {
@@ -645,6 +662,42 @@ export const trainingView = {
       try {
         await endpoints.trainingTest(jobId, "");
         toast.success(t("training.testQueued"));
+      } catch (err) {
+        toast.error(err);
+      }
+    }
+
+    async function cleanupJob(jobId) {
+      const confirmed = await confirmModal({
+        title: t("training.cleanupConfirmTitle"),
+        message: t("training.cleanupConfirm"),
+        danger: true,
+        confirmLabel: t("training.cleanupCache"),
+      });
+      if (!confirmed) return;
+      try {
+        const data = await endpoints.trainingCleanup(jobId);
+        selectedJob = data.job || selectedJob;
+        toast.success(t("training.cleanupDone", { mb: data.freed_mb ?? 0 }));
+        renderProgress();
+        await loadCapabilities();
+      } catch (err) {
+        toast.error(err);
+      }
+    }
+
+    async function cleanupAllJobs() {
+      const confirmed = await confirmModal({
+        title: t("training.cleanupConfirmTitle"),
+        message: t("training.cleanupAllConfirm"),
+        danger: true,
+        confirmLabel: t("training.cleanupAll"),
+      });
+      if (!confirmed) return;
+      try {
+        const data = await endpoints.trainingCleanupAll();
+        toast.success(t("training.cleanupAllDone", { count: data.cleaned ?? 0, mb: data.freed_mb ?? 0 }));
+        await loadCapabilities();
       } catch (err) {
         toast.error(err);
       }
