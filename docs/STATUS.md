@@ -87,3 +87,17 @@ Spazio tipico del progetto dopo la pulizia: ~8,5 GB totali, di cui `runtime/` 5,
 2. Con il dataset spot: creare il modello con preset **Qualità** (o Bilanciato per una prova),
    togliendo musica/jingle; poi usare l'auto-test per scegliere `index_rate`/`protect`/formant.
 3. Valutare restauro audio / TTS per le parole dove il modello fatica (progetto separato).
+
+## Punto di arrivo (23/11/2026)
+
+- App **3.3.2** in esecuzione con una sola istanza; nessun training attivo.
+- **Dataset pulito**: `Modelli/Dataset_Spot_Locali_pulito` (497 training + 5 validation, 165,7 min,
+  WAV 48 kHz mono). L'originale in `Modelli/Dataset_Spot_Locali` è intatto.
+- **Spazio**: `runtime/` 5,7 GB, `Modelli/` 3,5 GB (originale + pulito), `data/` ~0,02 GB,
+  `da_eliminare/` ~0,45 GB (cancellabile quando vuoi), `dist/` solo gli archivi 3.3.2.
+- **GUI**: suggerimenti "?" su Addestramento/Configurazione/Modelli, log di training con
+  auto-scroll, confronto checkpoint e fine-tune con backup.
+- **Un solo training alla volta**: il backend risponde `409 training_busy`; i job annullati
+  possono essere eliminati dalla lista.
+- **Release**: [PC 3.3.2](https://github.com/Nicotina4ever/rvc-portable/releases/tag/v3.3.2) ·
+  [Android 4.0](https://github.com/Nicotina4ever/rvc-droid/releases/tag/v4.0).
